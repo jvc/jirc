@@ -1,0 +1,137 @@
+## binds
+
+alias act.binds {
+  eval {
+    bind ^A start_of_line
+    bind ^B backward_character
+    bind ^C self_insert
+    bind ^D delete_character
+    bind ^E end_of_line
+    bind ^F forward_character
+    bind ^G self_insert
+    bind ^H backspace
+    bind ^I parse_command tab.complete
+    bind ^K parse_command //join -invite
+    bind ^L refresh_screen
+    bind ^M send_line
+    bind ^N forward_history
+    bind ^O self_insert
+    bind ^R parse_command tab.del_cur
+    bind ^U erase_line
+    bind ^V self_insert
+    bind ^X switch_channels
+    bind ^Z stop_irc
+    bind ^_ self_insert
+    bind ^? ${TERM == [cons25] || opt.xdelf ? [$key.del] : [backspace]}
+
+    bind ^[^? delete_previous_word
+    bind ^[^H delete_previous_word
+
+    bind ^[a parse_command chat
+    bind ^[c parse_command ^window create
+    bind ^[g parse_command get
+    bind ^[h parse_command ^window hide
+    bind ^[i parse_command ^window
+    bind ^[k parse_command ^window kill
+    bind ^[l parse_command ^window list
+    bind ^[r parse_command noget
+    bind ^[x parse_command clear
+    bind ^[- parse_command ^window shrink 1
+    bind ^[+ parse_command ^window grow 1
+    bind ^[1 parse_command ^window swap 1
+    bind ^[2 parse_command ^window swap 2
+    bind ^[3 parse_command ^window swap 3
+    bind ^[4 parse_command ^window swap 4
+    bind ^[5 parse_command ^window swap 5
+    bind ^[6 parse_command ^window swap 6
+    bind ^[7 parse_command ^window swap 7
+    bind ^[8 parse_command ^window swap 8
+    bind ^[9 parse_command ^window swap 9
+    bind ^[0 parse_command ^window swap 10
+
+    bind ^[a parse_command get
+    bind ^[b swap_last_window
+    bind ^[c parse_command ^window create
+    bind ^[g parse_command get
+    bind ^[h parse_command ^window hide
+    bind ^[i parse_command ^window
+    bind ^[k parse_command ^window kill
+    bind ^[l parse_command ^window list
+    bind ^[r parse_command noget
+    bind ^[\; previous_window
+    bind ^[` parse_command wcycle
+    bind ^[' next_window
+    bind ^[, swap_previous_window
+    bind ^[. swap_next_window
+    bind ^[- parse_command ^window shrink 1
+    bind ^[+ parse_command ^window grow 1
+    bind ^[1 parse_command ^window swap 1
+    bind ^[2 parse_command ^window swap 2
+    bind ^[3 parse_command ^window swap 3
+    bind ^[4 parse_command ^window swap 4
+    bind ^[5 parse_command ^window swap 5
+    bind ^[6 parse_command ^window swap 6
+    bind ^[7 parse_command ^window swap 7
+    bind ^[8 parse_command ^window swap 8
+    bind ^[9 parse_command ^window swap 9
+    bind ^[0 parse_command ^window swap 10
+
+    bind ^[p scroll_backward
+    bind ^[n scroll_forward
+
+    bind ^[[1~ $key.hom
+    bind ^[[2~ $key.ins
+    bind ^[[3~ $key.del
+    bind ^[[4~ end_of_line
+    bind ^[[5~ scroll_backward
+    bind ^[[6~ scroll_forward
+    bind ^[[8~ end_of_line
+    bind ^[[11~ parse_command $key.01
+    bind ^[[12~ parse_command $key.02
+    bind ^[[13~ parse_command $key.03
+    bind ^[[14~ parse_command $key.04
+    bind ^[[15~ parse_command $key.05
+    bind ^[[17~ parse_command $key.06
+    bind ^[[18~ parse_command $key.07
+    bind ^[[19~ parse_command $key.08
+    bind ^[[20~ parse_command $key.09
+    bind ^[[21~ parse_command $key.10
+    bind ^[[23~ parse_command $key.11
+    bind ^[[24~ parse_command $key.12
+
+    bind ^[[F end_of_line
+    bind ^[[G scroll_forward
+    bind ^[[H $key.hom
+    bind ^[[I scroll_backward
+    bind ^[[L $key.ins
+    bind ^[[M parse_command $key.01
+    bind ^[[N parse_command $key.02
+    bind ^[[O parse_command $key.03
+    bind ^[[P parse_command $key.04
+    bind ^[[Q parse_command $key.05
+    bind ^[[R parse_command $key.06
+    bind ^[[S parse_command $key.07
+    bind ^[[T parse_command $key.08
+    bind ^[[U parse_command $key.09
+    bind ^[[V parse_command $key.10
+    bind ^[[W parse_command $key.11
+    bind ^[[X parse_command $key.12
+
+    bind ^[[OA parse_command $key.01
+    bind ^[[OB parse_command $key.02
+    bind ^[[OC parse_command $key.03
+    bind ^[[OD parse_command $key.04
+    bind ^[[OE parse_command $key.05
+
+    bind ^[OP parse_command $key.01
+    bind ^[OQ parse_command $key.02
+    bind ^[OR parse_command $key.03
+    bind ^[OS parse_command $key.04
+  }
+  if (@opt.elect) {
+    fec ($opt.elect) char {
+      eval bind \\$char parse_command \{@ :next = msar\(g/\(/\)/\</\>/\{/\}/\[/\]/\`/\'/\\$char\)\;eval xtype -l \\$char\$\{numitems\(paste\) ? [] : next\}\;parsekey BACKWARD_CHARACTER\}
+    }
+  }
+}
+

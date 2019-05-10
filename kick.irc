@@ -1,0 +1,72 @@
+## kick
+
+alias fillkick {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if ((:nick = shift(args))) {
+    kick $chan $nick $args
+    //mode $chan +l ${numonchannel($chan) - 1}
+  } else {
+    xecho -s -b Usage: FILLKICK [channel|*] <nickname> [comment]
+  }
+}
+
+alias kick {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    @ :nick = shift(args)
+    @ :reason = args ? args : opt.kickm
+    //kick $chan $nick $reason
+  } else {
+    xecho -s -b Usage: KICK [channel|*] <nickname> [comment]
+  }
+}
+
+alias mk {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    @ tmp.reason = @args ? args : opt.kickm
+    chn.mass_kick $chan $remw($N $chops($chan) $nochops($chan))
+  } else {
+    xecho -s -b Usage: MK [channel|*] [reason]
+  }
+}
+
+alias mok ok
+alias ok {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    @ tmp.reason = @args ? args : opt.kickm
+    chn.mass_kick $chan $remw($N $chops($chan))
+  } else {
+    xecho -s -b Usage: OK [channel|*] [reason]
+  }
+}
+
+alias mnk
+alias nk {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    @ tmp.reason = @args ? args : opt.kickm
+    chn.mass_kick $chan $nochops($chan)
+  } else {
+    xecho -s -b Usage: NK [channel|*] [reason]
+  }
+}
+
+alias mlk lk
+alias lk {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    @ tmp.reason = @args ? args : opt.kickm
+    chn.mass_kick $chan $chums($chan)
+  } else {
+    xecho -s -b Usage: LK [channel|*] [reason]
+  }
+}
+

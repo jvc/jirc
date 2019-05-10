@@ -1,0 +1,62 @@
+## friends list - 180
+
+alias addo addop
+alias addop {
+  @ :args = [$*]
+  @ :chan = ischannel($0) ? shift(args) : C
+  if (([$0] != [-h]) && chan && args) {
+    ^local uh
+    @ :user = shift(args)
+    if (index(*?!@ $user) == -1) {
+      unless (uh = _userhost($user)) {
+        xecho -s -b No such user
+        return 0
+      }
+    }
+    @ :uh = _mask($uh)
+    fe ($split(, $chan)) temp {
+      @ :enc = encode($tolower($temp))
+      @ fro.o[$enc] = uniq($fro.o[$enc] $uh)
+    }
+    xecho -s -b Added $uh to the friends list as [+o $chan]
+  } else {
+    xecho -s -b Usage: ADDOP [channel[,s]] <nickname|mask>
+  }
+}
+
+alias addv addvoice
+alias addvoice {
+  @ :args = [$*]
+  @ :chan = ischannel($0) ? shift(args) : C
+  if (([$0] != [-h]) && chan && args) {
+    ^local uh
+    @ :user = shift(args)
+    if (index(*?!@ $user) == -1) {
+      unless (uh = _userhost($user)) {
+        xecho -s -b No such user
+        return 0
+      }
+    }
+    @ :uh = _mask($uh)
+    fe ($split(, $chan)) temp {
+      @ :enc = encode($tolower($temp))
+      @ fro.v[$enc] = uniq($fro.v[$enc] $uh)
+    }
+    xecho -s -b Added $uh to the friends list as [+v $chan]
+  } else {
+    xecho -s -b Usage: ADDVOICE [channel[,s]] <nickname|mask>
+  }
+}
+
+on #-join 180 "*" {
+  if (ischanop($_n() $1)) {
+    @ :enc = encode($tolower($1))
+    if (rmatch($0!$2 $fro.o[$enc])) {
+      timer -ref $0.$1 3 unless \(ischanop\($0 $1\)\) \{//mode $1 +o $0\}
+    } elsif (rmatch($0!$2 $fro.v[$enc])) {
+      timer -ref $0.$1 3 unless \(ischanvoice\($0 $1\)\) \{//mode $1 +v $0\}
+    }
+  }
+}
+
+

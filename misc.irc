@@ -1,0 +1,57 @@
+## auto join on connect - 140
+
+alias act.ajoin {
+  if (opt.ajoin) {
+    ^on #-connect 140 "*" join $opt.ajoin
+  } else {
+    ^on #-connect 140 -
+  }
+}
+
+## topic locking - 170
+
+on #-topic 170 "*" {
+  @ :serv = lastserver()
+  @ :temp = msc.locked[$serv][$encode($tolower($1))]
+  if (@temp && [$0] != _n()) {
+    //topic $1 $temp
+  }
+}
+
+## edit
+
+alias edit editalias
+alias editalias {
+  if ((:name = toupper($0))) {
+    parsekey erase_line
+    xtype -literal $(K)ALIAS $name $aliasctl(alias get $name)
+  } else {
+    xecho -s -b Usage: EDITALIAS <alias name>
+  }
+}
+
+alias editassign {
+  if ([$#]) {
+    if (var = aliasctl(assign get $0)) {
+      xtype -literal $(K)ASSIGN $var $($var)
+    } else {
+      xtype -literal $(K)ASSIGN $var 
+    }
+  } else {
+    xecho -s -b Usage: EDITASSIGN <variable>
+  }
+}
+
+alias editset {
+  if ([$#]) {
+    @ :vars = pattern($0% $_getsets())
+    if (#vars == 1) {
+      xtype -literal $(K)SET $vars $($vars)
+    } else {
+      set $var
+    }
+  } else {
+    xecho -s -b Usage: EDITSET <variable>
+  }
+}
+

@@ -1,0 +1,379 @@
+## environment
+
+on ^001 ^"*"
+on ^002 ^"*"
+on ^003 "*" {xecho -b $1-}
+on ^211 "*" {xecho -b $1 $2 $tdiff2($7)}
+on ^212 "*" {xecho -b $*}
+on ^213 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^214 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^215 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^216 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^217 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^218 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^241 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^242 "*" {xecho -b $1-}
+on ^243 "*" {xecho -b $1:$2:$3:$4:$5:$6}
+on ^244 "*" {xecho -b $1:$2:$3:$4}
+on ^219 "*" {xecho -b End of $(K)STATS $1}
+on ^221 "*" {xecho -b mode36/-1$_n() is: 36$1}
+on ^251 "*" {xecho -b There are 57$3 users and 57$6 invisible on 57$9 Server$plural($9)}
+on ^252 "*" {xecho -b 57$1 IRC Operator$plural($1) online}
+on ^253 "*" {xecho -b 57$1 Unknown connection$plural($1)}
+on ^254 "*" {xecho -b 57$1 Channel$plural($1) formed}
+on ^255 "*" {xecho -b 57$3 clients and 57$6 server$plural($6)}
+on ^262 "*" {xecho -b End of $(K)TRACE}
+on ^265 "*" {xecho -b Current local  users:57$[6]4 Max:57$6}
+on ^266 "*" {xecho -b Current global users:57$[6]4 Max:57$6}
+on ^302 "*" {xecho -b $1-}
+on ^303 "*" {xecho -b Current online users: 57$*}
+on ^315 "*" {fmt.hdr.disp_opn;^set -coninued_line}
+on ^305 "*" xecho -b You are no longer marked as being away
+on ^306 "*" xecho -b You have been marked as being away
+on ^301 "*" {
+  if (tmp.whois) {
+    fmt.av.disp_opn Away $1-
+  } else {
+    if (!opt.noawayonmsg) {
+       xecho -b 57$0-1 is away: $1-
+     }
+  }
+}
+on ^314 "*" {
+  if (tmp.whowas) {
+    fmt.hdr.disp_opn
+  } else {
+    @ tmp.whowas = 1
+  }
+  ^set continued_line $fmt.av.get_contline()
+  fmt.hdr.disp_opn
+  fmt.av.disp_opn User $136!-1$236@-1$3 36\(-1$j.country_get($after(-1 . $3))36\)
+  fmt.av.disp_opn Ircname $5--1
+}
+on ^369 "*" {
+  if (tmp.whowas) {
+    ^assign -tmp.whowas
+    ^set -continued_line
+    fmt.hdr.disp_opn $0
+  }
+}
+on ^311 "*" {
+  if (tmp.whois) {
+    fmt.hdr.disp_opn
+  } else {
+    @ tmp.whois = 1
+  }
+  ^set continued_line $fmt.av.get_contline()
+  fmt.hdr.disp_opn
+  fmt.av.disp_opn User $136!-1$236@-1$3 36\(-1$j.country_get($after(-1 . $3))36\)
+  fmt.av.disp_opn Ircname $5-
+}
+on ^284 "*" {fmt.av.disp_opn Admin $1-}
+on ^307 "*" {fmt.av.disp_opn Regged $1-}
+on ^312 "*" {fmt.av.disp_opn Server $2 [-1$3-]}
+on ^313 "*" {fmt.av.disp_opn Ircop $1-}
+on ^310 "*" {fmt.av.disp_opn Helpop $1-}
+on ^319 "*" {fmt.av.disp_opn Channels $2-}
+on ^317 "*" {
+  fmt.av.disp_opn Idle $tdiff($2)
+  if (isnumber($3)) {fmt.av.disp_opn Signon $stdtime($3)}
+}
+on ^318 "*" {
+  if (tmp.whois) {
+    ^assign -tmp.whois
+    ^set -continued_line
+    fmt.hdr.disp_opn $0
+  }
+}
+#on ^321 "*" ^set continued_line ;echo ,- Channel ------- Users 36- Topic ------------------------------------------->
+#on ^322 "*" echo |  $[15]1 $[5]2   $3- 
+#on ^323 "*" fmt.hdr.disp_opn $0;^set -continued_line
+on ^324 "*" {if ([$2] != [+]) xecho -b 36[-1$136]-1 Mode is: 57$2-}
+on ^329 "*" {xecho -b 36[-1$136] Created $stdtime($2)}
+on ^331 "*" {xecho -b 36[-1$136] No topic set on channel}
+on ^332 "*" {@ temp = [$2-] }
+on ^333 "*" {xecho -b 36[-1$136] Topic set by 57$2 on $strftime($3 %D at $clockfmt() %Z): $temp;^assign -temp}
+on ^338 "*" {fmt.av.disp_opn Address $2 36\(-1$3-36\)-1}
+on ^341 "*" {xecho -b Invited 57$1 to channel 36$2}
+on ^351 "*" {xecho -b $1-}
+on ^352 "*" {
+  @:state = msar(/H/52/G/51/$[2]2)
+  echo |  36$[12]0 $state$[12]1 $[-10]336@-1$[22]4 $[-20]536\:-1$[4]6   $7-
+}
+on ^381 "*" {xecho -b You are now an IRC operator 36\(-1$servername($lastserver())36\)}
+on ^382 "*" {xecho -b Loading configuration file 36\(-1$servername($lastserver())36\)}
+on ^385 "*" {xecho -b You are no longer an IRC operator 36\(-1$servername($lastserver())36\)}
+on ^386 "*" {xecho -b You are no longer an IRC operator 36\(-1$servername($lastserver())36\)}
+on ^391 "*" {xecho -b $2- 36\(-1$036\)}
+on ^353 "*" {
+  @ :chan = encode($tolower($2))
+  fe ($tr(/@/!/$sar(g/.?/,/$3-))) nick {
+    push tmp.names[$chan] ${index(*!+., $[1]nick) == -1 ? [.] : []}$nick
+  }
+}
+on ^366 "*" {
+  foreach tmp.names temp {
+    @ :chan = decode($temp)
+    @ :t = numonchannel($chan)
+    ^local o $#chops($chan)
+    xecho -b 36[-1$chan36] 57$t total user$plural($t) 36- 57$o operator$plural($o) 57$#voiced($chan) voiced 57$#chums($chan) -1normal
+    fe ($uniq($tr(/!,/@?/$sort($tmp.names[$temp])))) t1 t2 t3 t4 t5 {
+      echo   36- $msar(g/@/56@54/+/51+54/?/57?54/./ 54/\*/52*54/[$[11]t1]${t2 ? [ \[$[11]t2\]] : []}${t3 ? [ \[$[11]t3\]] : []}${t4 ? [ \[$[11]t4\]] : []}${t5 ? [ \[$[11]t5\] 36-] : []})
+    }
+    ^assign -tmp.names[$temp]
+  }
+}
+on ^364 "*" {
+  unless (tmp.links) {
+    ^set continued_line |         
+    @ tmp.links = 1
+    echo +- 57Hops - 57Server $repeat(${gomx() - 19} -)>
+  }
+  echo |  57$[2]3     $1 [-1$4-]
+}
+on ^365 "*" {
+  if (tmp.links) {
+    ^set -continued_line
+    ^assign -tmp.links
+    fmt.hdr.disp_opn $0
+  }
+}
+on ^372 "*" {echo $1-}
+on ^374 "*" {xecho -b End of $(K)INFO}
+on ^375 "*" {xecho -b 57$0 - Message of the Day:}
+on ^376 "*" {xecho -b End of $(K)MOTD}
+on ^394 "*" {xecho -b End of $(K)USERS}
+on ^401 "*" {xecho -b No such nick: $1}
+on ^402 "*" xecho -b Server does not exist
+on ^403 "*" {xecho -b No such channel: $1}
+on ^404 "*" {xecho -b 36[-1$136] cannot send to channel 36\(-1$036)}
+on ^405 "*" {xecho -b Maximum amount of channels reached 36\(-1$036\)}
+on ^406 "*" {xecho -b No such nick: $1}
+on ^407 "*" {xecho -b To many targets for PRIVMSG 36\(-1$036)}
+on ^408 "*" {xecho -b No such server: $1}
+on ^411 "*" {xecho -b No target for PRIVMSG 36\(-1$036)}
+on ^412 "*" {xecho -b No text to send 36\(-1$036\)}
+on ^421 "*" {xecho -b Unknown command: $1 36\(-1$036\)}
+on ^432 "*" {xecho -b Erroneus nickname: $1}
+on ^433 "*" {xecho -b Nickname is in use: $1}
+on ^436 "*" {xecho -b Nickname is in use 36\(-1$036\)}
+on ^441 "*" {xecho -b 36[-1$236] -1Not on channel: $1}
+on ^442 "*" {xecho -b 36[-1$136] -1Not on channel}
+on ^443 "*" {xecho -b 36[-1$236] -1already on channel: $1}
+on ^444 "*" {xecho -b 57$1 is not logged in 36\(-1$036\)}
+on ^445 "*" {xecho -b Cannot summon to that machine 36\(-1$036\)}
+on ^446 "*" {xecho -b Command not avalible 36\(-1$036\)}
+on ^451 "*" {xecho -b Not registered yet 36\(-1$0)36\)}
+on ^461 "*" {xecho -b Missing arguments 36\(-1$036\)}
+on ^464 "*" {xecho -b Password incorrect 36\(-1$036\)}
+on ^465 "*" {xecho -b You have been klined 36\(-1$036\)}
+on ^471 "*" {xecho -b 36[-1$136] Cannot join channel 36\(+l36\)}
+on ^473 "*" {xecho -b 36[-1$136] Cannot join channel 36\(+i36\)}
+on ^474 "*" {xecho -b 36[-1$136] Cannot join channel 36\(+b36\)}
+on ^475 "*" {xecho -b 36[-1$136] Cannot join channel 36\(+k36\)}
+on ^476 "*" {xecho -b 36[-1$136] Cannot join channel 36\(mask error36\)}
+on ^481 "*" xecho -b You are not an IRC operator
+on ^482 "*" {xecho -b 36[-1$136] you are not a channel operator}
+on ^483 "*" xecho -b You cannot kill a server
+on ^472 "*" {xecho -b Unknown mode character "57$1" 36\(-1$036\)}
+on ^501 "*" {xecho -b Unknown mode flag 36\(-1$036\)}
+on ^600 "*" {xecho -b 57$1 36\(-1$2@$336\) $5- at $Z}
+on ^601 "*" {xecho -b 57$1 36\(-1$2@$336\) $5- at $Z}
+on ^602 "*" {xecho -b Removed 57$1 from watch list}
+on ^603 "*" {xecho -b $1-}
+on ^604 "*" {xecho -b 57$1 36\(-1$2@$336\) $5- at $Z}
+on ^605 ^"*"
+on ^606 "*" {xecho -b Currently watching: $1-}
+on ^607 "*" {xecho -b End of $(K)WATCH}
+
+on ^action "*" {echo 55* $0${iscurchan($1) ? [] : [35\:55$1]} $2-}
+on ^connect "*" {//mode $_n() $opt.umode}
+on ^ctcp "*" {xecho -b ${ischannel($1) ? [36\[-1$136\] ] : []}51CTCP $remts($2-) request from 57$0 36\(-1$userhost()36\)}
+on #-ctcp 1 '% $_n() PAGE*' 3beeps
+on #-ctcp 1 "% % SOUND ?*" {
+  @ :file = [$3] =~ [%.wav] ? [$3] : [$3.wav]
+  if (file !~ [*\;*]) {
+    fe ($opt.wpath) temp {
+      if (fexist($temp/$file) == 1) {
+        exec $opt.wplay $temp/$file >/dev/null 2>&1
+        break
+      }
+    }
+  }
+}
+on ^ctcp_reply ^"% DCC REJECT"
+on ^ctcp_reply "*" {xecho -b 51CTCP $2 reply from 57$0: $3-}
+
+on ^dcc_chat "*" {echo 32<- $ts()=52$0\(32<DCC>\)= $sar(g/
+//$1-)}
+on ^dcc_connect "*" {xecho -b 57DCC $1 connection with 36$0 [-1$2:-1$3] established}
+on ^dcc_lost "% SEND*" {xecho -b 57DCC SEND ${[$2] !~ [*\/*] ? [$2] : after(-1 \/ $2)} with 36$0 ${[$5] != [COMPLETE] ? [lost] : [complete]}}
+on ^dcc_lost "% GET % % % COMPLETE*" {xecho -b 57DCC GET ${[$2] !~ [*\/*] ? [$2] : after(-1 \/ $2)} with 36$0 complete 36\(-1$3 kB\/s36\)}
+on ^dcc_lost "% GET*" {xecho -b 57DCC GET ${[$2] !~ [*\/*] ? [$2] : after(-1 \/ $2)} with 36$0 lost}
+on ^dcc_lost "*" {xecho -b 57DCC $1 with 36$0 lost}
+on ^dcc_offer "*" {xecho -b 57DCC $1- request sent to 36$0}
+on ^dcc_request "*" {
+  beep
+  xecho -b 57DCC $1 request from 36$0 [-1$3:-1$4]
+  if ([$2] == [chat]) {
+    xecho -b Type $(K)CHAT to accept, $(K)NOCHAT to decline
+  }
+}
+on ^dcc_request "% send*" {
+  xecho -b 57DCC SEND $2 request from 36$0 [-1$3:-1$4]
+  beep
+  if (:file = [$5]) {
+#    until (fexist($dcc_store_path/$file) == -1) {
+#      @ file #~ [a]
+#    }
+#    unless (file == [$5]) {
+#      xecho -b 57Warning: 57$5 exists, renaming to 36-> 57$file
+#      ^dcc rename $0 $5 $file
+#    }
+    if (rmatch($5 $opt.adget)) {
+      xecho -b Automaticly receiving 57$5 36\(-1${[$6] /1024}kB36\)
+      //dcc get $0
+    } else {
+      xecho -b Press Meta-G to Get, Meta-R to Reject
+    }
+  } elsif ([$2]) {
+    xecho -b 57DCC 57GET $2 with 36$0 is null data! Cancled!
+    dcc close get $0
+  }
+}
+
+#on ^dcc_list "start *" {
+#  echo 36+- 57Type 36- 57Nick ----- Info 36------------------------
+#}
+#on ^dcc_list "end *" fmt.hdr.disp_enc
+#
+#
+# $0 = type
+# $2 = nick
+# $3 = 
+#on ^dcc_list "*" {
+#  @ :tran = [$6] ? [$6] : [-]
+#  @ :perc = before(. $trunc(1 ${(tran * 100) / [$5]}))
+#  @ :kbps = trunc(5 ${(tran / 1024) / (time() - [$4])})
+#  fmt.str.disp_enc  $[4]0   57$[10]2-1 $[-3]perc\% -1[36$[10]pscale($perc)-1]  $[7]kbps 36$[-27]{[$7] =~ [*\/*] ? after(-1 \/ $7) : [$7]} 
+#}
+
+on ^exec_error ^"*"
+on ^exec_exit ^"*"
+on ^exit "*" {
+  if (C) {
+    fe ($mychannels()) chan {
+      shook channel_signoff $chan $N $*
+    }
+  } else {
+    shook signoff $N $*
+  }
+  xecho -b Exit at $Z -- $uptime() emaciated
+}
+
+on -input "*" {@ lasti = [$*]}
+on ^invite "*" {
+  xecho -b 36[-1$136] Invite from 57$0 36\(-1$userhost()36\)
+  if (opt.ajinv) {
+    //join $1
+  } else {
+    xecho -b Press Ctrl-K to join "57$1" now
+  }
+}
+on ^join "*" {xecho -b 57$0 36\(-1$236\) has joined 36$1}
+on ^leave "*" {xecho -b 57$0 36\(-1$userhost()36\) has left 36$1}
+on ^kick "*" {xecho -b 57$0 was kicked off 36$2 by $1 36\(-1$3-36\)}
+on ^kill "*" {xecho -b Operkill: 57$1 was killed off 36$3 by 57$2 36\(-1$4-36\)}
+on ^mail "*" {xecho -b You have $0 new message$plural($0), $1 total}
+on ^msg "*" {echo 36<- $ts()[56$0\(36$userhost()\)] $1-}
+on ^msg_group "*" {echo 36<- $ts()[56$0\(36$userhost()\)] 57$1: $2-}
+on ^mode "*" {xecho -b Mode36/-1$1 by 57$0: 36$2-}
+on ^nickname "*" {
+  @ :chans = tr(/ /,/$chan.same_as($0 $lastserver()))
+  xecho -b ${chans ? [36\[-1$chans36\] ] : []}57$0 is now known as 36$1
+}
+on ^note "*" {echo 36%54$036\(34$userhost()36\)% $2- 36\(54$136\)}
+on ^notice "*" {beep;echo 34<- $ts()-54$0\(34$userhost()\)- $1-}
+on ^notice "%.% *" {echo 36-54$036- $1-}
+on ^notice "% %[%all*" {
+  @ :server = lastserver()
+  fe ($mychannels($server)) chan {
+    if ([$1] =~ [%$chan%]) {
+      hook bwall $server $chan $0 $2-
+      return
+    }
+  }
+  echo 36-54$036\(-1$userhost()36\)- $1-
+}
+on ^hook 'bwall % % % *$_n()*' beep;xecho -w $winchan($2 $1) 53* [57Wall36/51$2] 36<53$336> $4-
+on ^hook 'bwall % % $_n() *' xecho -w $winchan($2 $1) 53* [57Wall36/51$2] 36<57$336> $4-
+on ^hook "bwall *" {xecho -w $winchan($2 $1) 53* [57Wall36/51$2] 36<-1$336> $4-}
+on ^notify_signon "*" {xecho -b Signon by 57$0 36\(-1$136\) detected 36@-1$Z}
+on ^notify_signoff "*" {xecho -b Signoff by 57$0 detected 36@-1$Z}
+on ^odd_server_stuff "*" {xecho -b Oddserver stuff detected: $1- 36\(-1$036\)}
+on ^oper_notice "*" {echo 54-+57$054+- $1-}
+on ^pong "%.% *" {xecho -b Received 57PONG from 57$0-1${[$1] ? [: $1-] : []}}
+
+alias act.public_events
+{
+  if (opt.pubovn) {
+     ^on ^public "*" {echo 36<-1$ovn_get($0 $1)$036> $2-}
+     ^on ^public '% % *\$_n()*' {beep;echo 36<53$ovn_get($0 $1)$036> $2-}
+     ^on ^public_other "*" {echo 36<-1$ovn_get($0 $1)$036:-1$136> $2-}
+     ^on ^public_other '% % *\$_n()*' {beep;echo 36<53$ovn_get($0 $1)$036:53$136> $2-}
+     ^on ^public_msg "*" {echo 36<-1$ovn_get($0 $1)$0${iscurchan($1) ? [] : [36\:-1$1]}36> $2-}
+     ^on ^public_msg '% % *\$_n()*' {beep;echo 36<53$ovn_get($0 $1)$0${iscurchan($1) ? [] : [36\:53$1]}36> $2-}
+     ^on ^public_notice "*" {echo 36-34$ovn_get($0 $1)$036:34$136- $2-}
+     ^on ^public_notice '% % *\$_n()*' {beep;echo 36-53$ovn_get($0 $1)$036:53$136- $2-}
+     ^on ^send_action "*" {echo 55* $ovn_get($N $0)$N${iscurchan($0) ? [] : [35\:55$0]} $1-}
+     ^on ^send_notice "*" {echo ${ischannel($0) ? [36-54$ovn_get($N $0)$N36\:54$036-] : [34-> -54notice\(34$0\)-]} $1-}
+     ^on ^send_public "*" {echo 36<57$ovn_get($N $0)$N${iscurchan($0) ? [] : [36\:57$0]}36> $1-}
+  } else {
+     ^on ^public "*" {echo 36<-1$036> $2-}
+     ^on ^public '% % *\$_n()*' {beep;echo 36<53$036> $2-}
+     ^on ^public_other "*" {echo 36<-1$036:-1$136> $2-}
+     ^on ^public_other '% % *\$_n()*' {beep;echo 36<53$036:53$136> $2-}
+     ^on ^public_msg "*" {echo 36<-1$0${iscurchan($1) ? [] : [36\:-1$1]}36> $2-}
+     ^on ^public_msg '% % *\$_n()*' {beep;echo 36<53$0${iscurchan($1) ? [] : [36\:53$1]}36> $2-}
+     ^on ^public_notice "*" {echo 36-34$036:34$136- $2-}
+     ^on ^public_notice '% % *\$_n()*' {beep;echo 36-53$036:53$136- $2-}
+     ^on ^send_action "*" {echo 55* 55$N${iscurchan($0) ? [] : [35\:55$0]} $1-}
+     ^on ^send_notice "*" {echo ${ischannel($0) ? [36-54$N36\:54$036-] : [34-> -54notice\(34$0\)-]} $1-}
+     ^on ^send_public "*" {echo 36<57$N${iscurchan($0) ? [] : [36\:57$0]}36> $1-}
+  }
+}
+
+on ^send_ctcp "*" {xecho -b 51CTCP $2- request sent to 57$1}
+on ^send_ctcp ^"notice *"
+on ^send_ctcp ^"% % action *"
+on ^send_ctcp ^"% % sed *"
+on ^send_ctcp ^"% % dcc *"
+on ^send_dcc_chat "*" {echo -32> =52dcc\(32$0\)= $1-}
+on ^send_msg "*" {echo -36> [56msg\(36$0\)] $1-}
+on ^server_lost "*" {xecho -b Severed connection with $servername($0)}
+on ^server_notice "*" {echo -54+57$054+- $2-}
+on ^signoff "*" {
+  @ :chans = tr(/ /,/$chan.same_as($0))
+  xecho -b ${chans ? [36\[-1$chans36\] ] : []}57$0 has quit irc 36\(-1$1-36\)
+}
+on ^silence "-*" {xecho -b Removed 57$1- from silence list}
+on ^silence "+*" {xecho -b Added 57$1- to silence list}
+#TODO
+on ^switch_channels "*" {if ([$2]) xecho -w $0 -b You are now talking to channel $2}
+on ^switch_windows "*" {@ tmp.nwin = [$3]}
+on ^topic "*" {
+  if ([$#] > 2) {
+    xecho -b 36[-1$136] topic changed by 57$0: $2-
+  } else {
+    xecho -b 36[-1$136] topic unset by 57$0
+  }
+}
+on ^timer "%:00*" xecho -a -b Current time is $Z
+#on ^timer "%:15*" xecho -a -b Current time is $Z
+on ^timer "%:30*" xecho -a -b Current time is $Z
+#on ^timer "%:45*" xecho -a -b Current time is $Z
+
+on ^wallop "*" {echo 52!32$052! $1-}
+on ^yell ^"Division by zero!"
+on ^yell ^"### Incoming file has been received with no errors."
+

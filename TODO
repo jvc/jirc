@@ -1,0 +1,11 @@
+- fix /scan to use str.longest and pad accordingly
+- format "actually using host shit
+- /tban with * doesn't call /clearbans or something.. it doesn't work
+- do some shit with away logs so they get purged first time script is loaded after prompt
+- do some shit with time stamping
+- fix tabcomp bugs
+- percent scale on dcc transfers - possibly make it two lines
+- display matches in tab completion should calculate max width & factor in window geom
+- make an ACL instead of friends lists
+- possibly put arrows on join/parts
+

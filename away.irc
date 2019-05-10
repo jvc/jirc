@@ -1,0 +1,151 @@
+## away - 130
+alias back here
+
+alias here {
+  @ tmp.backm = [$*]
+  //away
+}
+
+alias gone {
+  @ tmp.awaym = @ ? [$*] : opt.awaym
+  //away ${[$[1]0] == [-] ? shift(tmp.awaym) : [-one]} $tmp.awaym${opt.taway ? [ \[$strftime(%D $clockfmt() %Z)\]] : []}
+}
+
+alias away {
+  if (isaway()) {
+    //away $*
+  } else {
+    gone $*
+  }
+}
+
+on #-305 130 "*" {
+  unless (opt.naway == [*]) {
+    @ :msg = (tmp.backm ? tmp.backm : opt.backm) ## (msc.away[$lastserver()] ? [ \[Gone/$tdiff2(${time() - msc.away[$servernum()]})\]] : [])
+    fe ($mychannels($lastserver())) chan {
+      if (findw($chan $opt.naway) == -1) {
+        //describe $chan is back.. $msg
+      }
+    }
+  }
+  ^assign -msc.away[$lastserver()]
+}
+on #-306 130 "*" {
+  unless (opt.naway == [*]) {
+    fe ($mychannels($lastserver())) chan {
+      if (findw($chan $opt.naway) == -1) {
+        //describe $chan is gone.. ${tmp.awaym ? tmp.awaym : A}
+      }
+    }
+  }
+  @ msc.away[$lastserver()] = time()
+}
+
+alias act.aaway {
+  if (opt.aaway) {
+    ^on #-idle 130 -
+    ^on #-idle 130 "$opt.aaway" {
+      unless (A) {
+        //away -all autoaway after $opt.aaway minutes
+      }
+    }
+  } else {
+    ^on #-idle 130 -
+  }
+}
+
+
+
+## away message logging - 80
+
+alias readlog {
+  unless ([$0] == [-h]) {
+    @ :serv = isnumber($0) ? [$0] : servernum()
+    @ :file = [~/.awaylog.$serv]
+    if (fexist($file) == 1) {
+      @ :fd = open($file R)
+      until (eof($fd)) {
+        @ :temp = read($fd)
+        unless (eof($fd)) {
+          echo $temp
+        }
+      }
+      @ close($fd)
+      input_char "Remove away log (y/N) " {
+        if ([$0] == [y]) {
+          remlog $serv
+        } else {
+          xecho -b Type $(K)REMLOG $serv to remove this away log
+        }
+      }
+    } else {
+      xecho -b You have no away messages for this server
+    }
+  } else {
+    xecho -s -b Usage: READLOG [server refnum]
+  }
+}
+
+alias remlog {
+  unless ([$0] == [-h]) {
+    @ :serv = isnumber($0) ? [$0] : servernum()
+    unless (unlink(~/.awaylog.$serv)) {
+      xecho -s -b Removed away log 36\(~/.awaylog.$serv36\)
+    } else {
+      xecho -s -b Cannot remove away log 36\(~/.awaylog.$serv36\)
+    }
+  } else {
+    xecho -s -b $(K)REMLOG [server refnum]
+  }
+}
+
+alias logs awaylogs
+alias awaylogs {
+  unless ([$0] == [-h]) {
+    @ :temp = glob(.awaylog.*)
+    xecho -s -b You have $#temp away logs in $W 36\(-1$temp36\)
+  }
+}
+
+alias cleanlogs {
+  unless ([$0] == [-h]) {
+    @ :temp = glob(.awaylog.*)
+    xecho -b You have $#temp away logs in $W 36\(-1$temp36\)
+    fe ($temp) log {
+      @ unlink($temp)
+    }
+    xecho -b Cleared away logs
+  }
+}
+
+alias add_log {
+  if (opt.awaylog && msc.away[$0]) {
+    unless ((:fd = open(~/.awaylog.$0 W)) < 0) {
+      unless (fsize(~/.awaylog.$0)) {
+        @ chmod(~/.awaylog.$0 600)
+      }
+      @ write($fd [57$strftime(%m.%d.%y at $clockfmt())] $1-)
+      @ close($fd)
+    }
+  }
+}
+
+on #-kick 80 '$_n() *' add_log $lastserver() 57$0 was kicked off 57$2 by $1 36\(-1$3-36\)
+on #-msg 80 "*" {add_log $lastserver() [56$0\(36$userhost()\)] $1-}
+on #-notice 80 "*" {add_log $lastserver() -54$0\(34$userhost()\)- $1-}
+on #-notice 80 ^"% %[%all*"
+on #-public 80 '% % *$_n()*' add_log $lastserver() 36<53$036:53$136> $2-
+on #-public_msg 80 '% % *$_n()*' add_log $lastserver() 36<53$036:53$136> $2-
+on #-notify_signon 80 "*" {add_log $lastserver() Signon by 57$0 36\(-1$136\) detected at 36@-1$Z}
+on #-notify_signoff 80 "*" {add_log $lastserver() Signoff by 57$0 detected at 36@-1$Z}
+on #-305 80 "*" {
+  if (fsize(~/.awaylog.$servernum($0)) > 0) {
+    input_char "View away messages (Y/n) " {
+      unless ([$0] == [n]) {
+        readlog
+      } else {
+        xecho -b Type $(K)READLOG to view away messages
+      }
+    }
+  }
+}

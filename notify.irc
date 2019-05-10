@@ -1,0 +1,58 @@
+## notify - 120
+
+# to: spline
+
+on #-notify_signon 120 "*" {
+  @ :serv = servernum()
+  @ :nick = encode($tolower($0))
+  @ msc.notify.u[$serv][$nick] = [$1]
+  @ msc.notify.n[$serv][$nick] = time()
+  ^assign -msc.notify.f[$serv][$nick]
+}
+on #-notify_signoff 120 "*" {@ msc.notify.f[$servernum()][$encode($tolower($0))] = time()}
+
+alias notify {
+  if ([$#] && [$0] != [+]) {
+    fe ($split(, $*)) temp {
+      switch ($temp) {
+        (-) {
+          //^notify -
+          xecho -s -b Cleared notification list
+        }
+        (-%) {
+          @ :nick = rest(1 $temp)
+          xecho -s -b Removed "$nick" from the notification list
+          //^notify $temp
+          ^assign -msc.notify[$servernum()][$encode($tolower($nick))]
+        }
+        (*) {
+          xecho -s -b Added "$strip(+ $temp)" to the notification list
+          //^notify $temp
+        }
+      }
+    }
+  } else {
+    @ :serv = servernum()
+    echo +- 57Nick ----- 57User@57Host ---------------------------- 57Signon ---- 57Signoff ----+
+    fe ($notify(${[$0] ? [on] : []})) temp {
+      @ :nick = encode($tolower($temp))
+      @ :u = msc.notify.u[$serv][$nick]
+      @ :n = msc.notify.n[$serv][$nick]
+      @ :f = msc.notify.f[$serv][$nick]
+      fmt.str.disp_enc ${n && !f ? [52] : [51]}$[10]temp $[38]{u ? u : [-]} 57$[11]{n ? strftime($n %m/%d@%H\:%M) : [-]} $[11]{f ? strftime($f %m/%d@%H\:%M) : [-]}
+    }
+    fmt.hdr.disp_enc
+  }
+}
+
+alias unnotify {
+  if ([$#]) {
+    fe ($*) temp {
+      push string -$temp
+    }
+    notify $string
+  } else {
+    xecho -s -b Usage: UNNOTIFY <nickname>
+  }
+}
+

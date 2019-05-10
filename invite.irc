@@ -1,0 +1,24 @@
+## invite
+
+alias ilast invitelast
+alias invitelast {
+  unless ([$0] != [-h]) {
+    if (:chan = ischannel($0) ? [$0] : C) {
+      if ([$,]) {
+        //invite $, $chan
+      }
+    }
+  } else {
+    xecho -s -b Usage: INVITELAST [channel]
+  }
+}
+
+alias inv invite
+alias invite {
+  if ((:nick = [$0])) {
+    @ :chan = ischannel($1) ? [$1] : C
+    //invite $nick $chan
+  } else {
+    xecho -s -b Usage: INVITE <nickname> [channel|*]
+  }
+}

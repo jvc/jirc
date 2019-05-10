@@ -1,0 +1,282 @@
+## modes
+
+alias nolimit {
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (chan) {
+    //mode $chan -l
+  } else {
+    xecho -s -b Usage: NOLIMIT [channel|*]
+  }
+}
+
+alias aop opall
+alias opall {
+  if ([$0]) {
+    fe ($mychannels()) chan {
+      if (onchannel($0 $chan)) {
+        unless (ischanop($0 $chan)) {//mode $chan +o $0}
+      }
+    }
+  } else {
+    xecho -s -b Usage: OPALL <nickname>
+  }
+}
+
+alias ka kickall
+alias kickall {
+  if ([$0]) {
+    fe ($mychannels()) chan {
+      if (onchannel($0 $chan)) {
+        //kick $chan $*
+      }
+    }
+  } else {
+    xecho -s -b Usage: KICKALL <nickname> [reason]
+  }
+}
+
+alias mrop {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = chops($chan)) {
+      op $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MROP [channel|*]
+  }
+}
+
+alias mop {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($N $args / $nochops($chan))) {
+      op $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MOP [channel|*] [except]
+  }
+}
+
+alias mdop {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($N $args / $chops($chan))) {
+      dop $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MDOP [channel|*] [except]
+  }
+}
+
+alias mv {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($args / $onchannel($chan))) {
+      voice $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MV [channel|*] [except]
+  }
+}
+
+alias nv {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($args / $nochops($chan))) {
+      voice $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: NV [channel|*] [except]
+  }
+}
+
+alias lv {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($args / $chums($chan))) {
+      voice $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: LV [channel|*] [except]
+  }
+}
+
+alias mrv {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = voiced($chan)) {
+      voice $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MRV [channel|*] [except]
+  }
+}
+
+alias mdv {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (:nicks = remws($args / $onchannel($chan))) {
+      unvoice $chan $nicks
+    }
+  } else {
+    xecho -s -b Usage: MDV [channel|*] [except]
+  }
+}
+
+# code base ripped from nutbar
+alias mode {
+  if ((:targ = [$0])) {
+  #  if (!(:args = [$1-]) || ischannel($targ) || targ == [*]) {
+    if (:args = [$1-]) {
+      ^local parms
+      @ :mode = shift(args)
+      @ :serv = winserv()
+      @ :mmps = msc.modes[$serv] ? msc.modes[$serv] : max_modes($serv)
+      @ :count = @strip(+- $mode)
+      fec ($mode) char {
+        unshift parms $shift(parms)$char
+        if (char != [+] && char != [-]) {
+          unless (index($char ovblk) < 0) {
+            push parms $shift(args)
+          }
+          unless (--count % mmps) {
+            //mode $targ $parms
+            @ parms = right(1 $pass(+- $word(0 $parms)))
+          }
+        }
+      }
+      if (strip(+- $parms)) {
+        //mode $targ $parms
+      }
+    } else {
+      //mode $*
+    }
+  } else {
+    xecho -s -b Usage: MODE <*|#channel> [arguments]
+  }
+}
+
+alias fill {
+  unless ([$0] == [-h]) {
+    if (ischanop($N $chan) && (:chan = @ ? [$0] : C)) {
+      //mode $chan +l $numonchannel($chan)
+    }
+  } else {
+    xecho -s -b Usage: FILL [channel]
+  }
+}
+
+alias umode {
+  unless ([$0] == [-h]) {
+    //mode $N $*
+  } else {
+    xecho -s -b Usage: UMODE [mode]
+  }
+}
+
+alias key {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    //mode $chan +k $args
+  } else {
+    xecho -s -b Usage: KEY [channel|*] <key>
+  }
+}
+
+alias unkey {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    if (:chan = ischannel($0) || [$0] == [*] ? shift(args) : C) {
+      //mode $chan -k $key($chan)
+    }
+  } else {
+    xecho -s -b Usage: UNKEY [channel|*]
+  }
+}
+
+alias op {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      mode $chan +$repeat($#args o) $args
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: OP <nickname(s)>
+  }
+}
+
+alias dop {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      mode $chan -$repeat($#args o) $args
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: DOP <nickname(s)>
+  }
+}
+
+alias voice {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      mode $chan +$repeat($#args v) $args
+    } else {
+      xecho -b [-1$chan] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: VOICE <nickname(s)>
+  }
+}
+
+alias dv unvoice
+alias unvoice {
+  ^local args $*
+  @ :chan = ischannel($0) ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      mode $chan -$repeat($#args v) $args
+    } else {
+      xecho -b [-1$chan] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: UNVOICE <nickname(s)>
+  }
+}
+
+
+## auto set new channel modes - 150
+
+on #-329 150 "*" {
+  if (numonchannel($1) == 1 && opt.cmode) {
+    //mode $1 $opt.cmode
+  }
+}
+
+## gainops - 110
+
+alias chn.gainops {
+  unless (ischanop($N $0) || (numonchannel($0) != 1)) {
+    cycle $0
+  }
+}
+
+on #-leave 110 "*" unless ([$0] == _n()) {defer {chn.gainops $1}}
+on #-channel_signoff 110 "*" unless ([$1] == _n()) {defer {chn.gainops $0}}
+

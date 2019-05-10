@@ -1,0 +1,63 @@
+## actions
+
+alias mme describe
+alias qme describe $Q
+alias chc describe ${[$#] ? [$0] : T} ch ch ding
+alias ame {
+  if ([$#]) {
+    fe ($mychannels()) t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 {
+      describe $tr(/ /,/$remts($t0 $t1 $t2 $t3 $t4 $t5 $t6 $t7 $t8 $t9)) $*
+    }
+  } else {
+    xecho -s -b Usage: AME <action description>
+  }
+}
+
+
+## ctcp 
+
+alias sound {
+  if ([$#] > 1) {
+    ctcp $0 SOUND $1-
+  } else {
+    xecho -s -b Usage: SOUND <[=]nick|channel|*> <wav file>
+  }
+}
+
+alias version {
+  unless ([$0] == [-h]) {
+    if ([$0] !~ [*.*] && (@)) {
+      ctcp $* version
+    } elsif (@) {
+      //version $*
+    } else {
+      //version
+    }
+  } else {
+    xecho -s -b Usage: VERSION [nickname|server]
+  }
+}
+
+alias page {
+  if ((:targ = @ ? [$0] : Q ? Q)) {
+    //ctcp $targ PAGE
+  } else {
+    xecho -s -b Usage: PAGE <[=]nickname|channel|*>
+  }
+}
+
+alias ping {
+  if (:targ = @ ? [$0] : T) {
+    //ping $targ
+  }
+}
+
+alias bomb fcr
+alias fcr {
+  if ([$#] > 2) {
+    ^notice $0 $toupper($1) $2-
+  } else {
+    xecho -s -b Usage: FCR <nickname> <ctcp-request> <ctcp-reply>
+  }
+}
+

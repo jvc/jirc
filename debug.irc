@@ -1,0 +1,22 @@
+# variable debugger
+alias varech {
+  if ((:args = [$*])) {
+    ^local i -1
+    echo $args
+    while (temp = shift(args)) {
+      @ i++
+      echo $$$i is "$($i)"
+    }
+  } else {
+    xecho -s -b Usage: VARECH <arguments>
+  }
+}
+
+alias length {
+  if ([$#]) {
+    xecho -b "$*" is $@ characters long, with $printlen($*) printable characters
+  } else {
+    xecho -s -b Usage: LENGTH <string>
+  }
+}
+

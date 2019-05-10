@@ -1,0 +1,69 @@
+## windows
+
+alias server window server
+
+alias wcycle {
+  @ :refs = winrefs()
+  @ :temp = findw($winnum() $refs) + 1
+  @ :next = word(${temp + 1 > #refs ? 0 : temp} $refs)
+#  ^window ${!winvisible($next) ? [swap] : [refnum]} $next
+  ^window refnum_or_swap $next
+}
+
+alias balance window balance
+alias wbind window bind
+alias wcreate window create
+alias wdelete window delete
+alias wgrow window grow ${[$#] ? [$*] : 1}
+alias wshrink window shrink ${[$#] ? [$*] : 1}
+alias whide window hide
+alias hide window hide
+alias wkill window kill
+alias windows window list
+alias wlist window list
+alias wname window name
+alias wn wnew
+alias wnew ^window new_hide swap last
+alias wjoin ^window new_hide swap last channel $*
+alias wns ^window new_hide swap last server
+alias wnh ^window new_hide swap last
+alias wnl window level none
+alias wsize window size
+alias size window size
+alias ws ^window server
+alias wswap ^window swap
+
+
+## xterm title stuff
+
+alias xtitle if (opt.title) {xecho -r $chr(27)]2\;${[$#] ? [$*] : [$N@$S]}$chr(7)}
+alias xicon if (opt.title) {xecho -r $chr(27)]1\;${[$#] ? [$*] : [IRC]}$chr(7)}
+
+alias act.xterm {
+  if (opt.title) {
+    ^on #-channel_nick 60 '% % \$_n()' xtitle \$2@\$S
+    ^on #-nickname 60 "*" xtitle \$1@\$S
+    ^on #-connect 60 "*" xtitle
+    ^on #-window_create 60 "*" xtitle
+    ^on #-window_kill 60 "*" xtitle
+    ^on #-server_lost 60 "*" xtitle
+    ^on #-switch_windows 60 "*" xtitle
+    ^on #-exit 60 "*" {
+      @ :temp = getenv(TERM)
+      xtitle $temp
+    }
+  }
+}
+
+## window maintenance - 70
+
+alias win.fix_all {
+  fe ($winrefs()) win {
+    ^window $win name $win double ${opt.doubl ? [on] : [off]}${winlevel($win) == [ALL] ? [ level none] : []}
+  }
+}
+
+on #-connect 70 "*" win.fix_all
+on #-window_create 70 "*" win.fix_all
+on #-window_kill 70 "*" win.fix_all
+#on #-switch_windows 70 "*" parsekey refresh_status

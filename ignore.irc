@@ -1,0 +1,92 @@
+## ignores
+
+alias tignore {
+  unless ([$0] == [-h]) {
+    fe ($igmask(*)) ignore {
+      @ setitem(ignores $numitems(ignores) $ignore $igtype($ignore))
+    }
+    if (numitems(ignores)) {
+      ^local i
+      @ :num = numitems(ignores)
+      xecho -b There is $num ignore$plural($num)
+      @ :t = numitems(ignores)
+      for (@ i = 0, i < t, @ i++) {
+        @ :temp = getitem(ignores $i)
+        echo [57$[-2]i] $word(0 $temp) 36- $restw(1 $temp)
+      }
+      input "Remove which ignore (#/*) " {
+        if (@) {
+          unless ([$0] == [\*]) {
+            if (isnumber($0)) {
+              //ignore $word(0 $getitem(ignores $0)) none
+            }
+          } else {
+            for (@ i = 0, i < t, @ i++) {
+              //ignore $word(0 $getitem(ignores $i)) none
+            }
+          }
+        }
+        @ delarray(ignores)
+      }
+    }
+  } else {
+    xecho -s -b Usage: TIGNORE
+  }
+}
+
+alias rignore unignore
+alias unignore {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    if (:targ = shift(args)) {
+      # since channel names can have the wild card characters in them, assume that it litterally the name and not a pattern
+      if (ischannel($targ)) {
+        @ :pats = rigmask($targ)
+      } else {
+        if (index(*%?!@ $targ) != -1) {
+          @ :pats = igmask($targ)
+        } else {
+          if (index(*%?!@ $targ) != -1) {
+            @ :pats = rigmask($targ)
+          } else {
+            @ :pats = _userhost($targ) ? rigmask($_userhost($targ)) : rigmask($targ)
+          }
+        }
+      }
+      if (pats) {
+        fe ($pats) pat {
+          //ignore $pat none 
+        }
+      } else {
+        xecho -b No ignores matching $targ
+      }
+    } else {
+      tignore
+    }
+  } else {
+    xecho -s -b Usage: UNIGNORE [pattern]
+  }
+}
+
+alias ignore {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    if (:targ = shift(args)) {
+      @ :opts = args
+      if (ischannel($targ)) {
+        //ignore $targ $args
+      } else {
+        if (index(@!*%? $targ) == -1) {
+          @ :temp = _userhost($targ)
+          //ignore ${temp ? _mask($temp) : uhc($targ)} $args
+        } else {
+          //ignore $uhc($targ) $args
+        }
+      }
+    } else {
+      ignores
+    }
+  } else {
+    xecho -s -b Usage: IGNORE [nickname|pattern]
+  }
+}

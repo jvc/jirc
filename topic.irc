@@ -1,0 +1,52 @@
+## topic
+
+# idea from splitfire
+alias et edittopic
+alias edittopic {
+  ^local args $*
+  unless ([$0] == [-h]) {
+    if (:chan = ischannel($0) ? shift(args) : C) {
+      parsekey erase_line
+      xtype -literal $(K)topic $chan $topic.get($servernum() $chan)
+    }
+  } else {
+    xecho -s -b Usage: EDITTOPIC [channel|*]
+  }
+}
+
+alias notopic untopic
+alias ut untopic
+alias untopic {
+  unless ([$0] == [-h]) {
+    if (:chan = ischannel($0) || [$0] == [*] ? [$0] : C) {
+      topic -$chan
+    }
+  } else {
+    xecho -s -b Usage: UNTOPIC [channel|*]
+  }
+}
+
+
+
+## topic caching
+
+alias topic.add {@ msc.topics[$0][$encode($tolower($1))] = [$2-]}
+alias topic.get {@ function_return = msc.topics[$0][$encode($tolower($1))]}
+
+on #-332 30 "*" {topic.add $lastserver() $1-}
+on #-topic 30 "*" {topic.add $lastserver() $1-}
+on #-leave 30 '$_n() *' topic.add $lastserver() $1
+on #-kick 30 '$_n() *' topic.add $lastserver() $2
+on #-channel_signoff 30 '% $_n() *' topic.add $lastserver() $0
+
+
+alias lock {
+  ^local args $*
+  @ :chan = ischannel($0) ? shift(args) : C
+  if (args && chan) {
+    topic $chan $args
+    @ msc.locked[$winserv()][$encode($tolower($chan))] = args
+  } else {
+    xecho -s -b Usage: LOCK [channel|*] <topic>
+  }
+}

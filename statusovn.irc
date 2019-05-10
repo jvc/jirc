@@ -1,0 +1,16 @@
+## update statusbar thingy (o/v/n)
+
+alias chn.set_ovn {
+  @ chn.o = [$#chops()]
+  @ chn.n = [$#chums()]
+  @ chn.v = [$#voiced()]
+}
+
+on #-switch_channels 160 "*" chn.set_ovn
+on #-switch_windows 160 "*" chn.set_ovn
+on #-353 160 "*" defer {chn.set_ovn}
+on #-mode 160 '% $C *' chn.set_ovn
+on #-join 160 '% $C *' chn.set_ovn
+on #-leave 160 '% $C' chn.set_ovn
+on #-kick 160 '% % $C *' chn.set_ovn
+on #-channel_signoff 160 '$C *' chn.set_ovn

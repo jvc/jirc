@@ -1,0 +1,382 @@
+
+## configuration (NEW!)
+
+alias save {
+  @ :file = [$0] ? [$0] : [~/.jircrc]
+  unless ([$0] == [-h]) {
+    if (fexist($file) == 1) {
+      unless (unlink($file)) {
+        save $file
+      } else {
+        xecho -b Cannot remove old $file
+      }
+    } else {
+      unless ((:fd = open($file W)) < 0) {
+        @ write($fd)
+        if (:temp = notify()) {
+          @ write($fd NOTIFY $temp)
+        }
+        @ write($fd)
+        @ write($fd SET BANNER $BANNER)
+        @ write($fd SET REALNAME $REALNAME)
+        @ write($fd)
+        foreach sbc temp {
+          @ write($fd ASSIGN sbc.$temp $sbc[$temp])
+        }
+        @ write($fd)
+        foreach int temp {
+          @ write($fd ASSIGN opt.$temp $int[$temp])
+        }
+        @ write($fd)
+        foreach opt temp {
+          @ write($fd ASSIGN opt.$temp $opt[$temp])
+        }
+        @ write($fd)
+        foreach fro temp {
+          foreach fro[$temp] chan {
+            @ write($fd ASSIGN fro[$temp][$chan] $fro[$temp][$chan])    }
+        }
+        @ close($fd)
+        xecho -b Settings saved to $file
+      } else {
+        xecho -b Cannot open $file for writing
+      }
+    }
+  } else {
+    xecho -s -b Usage: SAVE [file]
+  }
+}
+
+alias configure {
+  clear
+  fmt.hdr.disp_enc $j.nicestr Configuration
+  fmt.str.disp_enc 36[57A36]  auto dcc get 36-> $[53]opt.adget
+  fmt.str.disp_enc 36[57B36]     auto join 36-> $[53]opt.ajoin
+  fmt.str.disp_enc 36[57C36]  def away msg 36-> $[53]opt.awaym
+  fmt.str.disp_enc 36[57D36] new chan mode 36-> $[53]opt.cmode
+  fmt.str.disp_enc 36[57E36] nickcomp char 36-> $[53]opt.compc
+  fmt.str.disp_enc 36[57F36]  def back msg 36-> $[53]opt.backm
+  fmt.str.disp_enc 36[57G36]  def kick msg 36-> $[53]opt.kickm
+  fmt.str.disp_enc 36[57H36]    no away in 36-> $[53]opt.naway
+  fmt.str.disp_enc 36[57I36]        no tab 36-> $[53]opt.notab
+  fmt.str.disp_enc 36[57J36]  def quit msg 36-> $[53]opt.quitm
+  fmt.str.disp_enc 36[57K36] def user mode 36-> $[53]opt.umode
+  fmt.str.disp_enc 36[57L36]     wav paths 36-> $[53]opt.wpath
+  fmt.str.disp_enc 36[57M36]    wav player 36-> $[53]opt.wplay
+  echo +------ 57Type Z to save settings ------+------------ 57ESC to quit -------------+
+  fmt.str.disp_enc 36[57N36]   24 hour clk 36-> $[-14]opt.24fmt | 36[57T36]   public @+   36-> $[-15]opt.pubovn
+  fmt.str.disp_enc 36[57O36]     auto away 36-> $[-14]opt.aaway | 36[57U36]   tstamp msgs 36-> $[-15]opt.stamp
+  fmt.str.disp_enc 36[57P36] no away on msg36-> $[-14]opt.noawayonmsg | 36[57V36]   tstamp away 36-> $[-15]opt.taway
+  fmt.str.disp_enc 36[57Q36]   dbl statbar 36-> $[-14]opt.doubl | 36[57W36]   xterm title 36-> $[-15]opt.title
+  fmt.str.disp_enc 36[57R36]   max tablist 36-> $[-14]opt.maxtab : 36[57X36]     user mask 36-> $[-15]opt.umask
+  fmt.str.disp_enc 36[57S36] auto nickcomp 36-> $[-14]opt.ncomp   36[57Y36] xterm del fix 36-> $[-15]opt.xdelf
+  fmt.hdr.disp_enc
+
+  @ :opt = [$0] ? [$0] : [$'config> ']
+
+  switch ($opt) {
+    (A) {
+      fmt.hdr.disp_enc auto dcc get
+      fmt.av.disp_enc variable opt.adget
+      fmt.av.disp_enc current $opt.adget
+      fmt.av.disp_enc description files that match these patterns will be automaticly received
+      fmt.av.disp_enc ex *.mp3 *.mp2
+      fmt.av.disp_enc - this will make you autmaticly receive mp3 and mp2 files
+      fmt.av.disp_enc default "*.jpg *.gif *.mp3 *.mp2"
+      fmt.hdr.disp_enc
+      if (:opt = [$"$$opt.adget = "]) {@ opt.adget = opt}
+    }
+    (B) {
+      fmt.hdr.disp_enc auto join
+      fmt.av.disp_enc variable opt.ajoin
+      fmt.av.disp_enc current $opt.ajoin
+      fmt.av.disp_enc description channels to automaticly join on a server connection
+      fmt.av.disp_enc ex #lame,lame2,#lame3 key,&lame4,lame5 key
+      fmt.av.disp_enc - will put you in #lame, #lame2, #lame3, &lame4, #lame5
+      fmt.av.disp_enc default ""
+      fmt.hdr.disp_enc
+      if (:opt = [$"$$opt.ajoin = "]) {@ opt.ajoin = opt}
+    }
+    (C) {
+      fmt.hdr.disp_enc def away message
+      fmt.av.disp_enc variable opt.awaym
+      fmt.av.disp_enc current $opt.awaym
+      fmt.av.disp_enc description away message to use when none is given
+      fmt.av.disp_enc ex i am no longer here!
+      fmt.av.disp_enc - will make it so when you type /away and you're not
+      fmt.av.disp_enc - already away you get set away with "i am no longer here!"
+      fmt.av.disp_enc default "probably looking at pr0n"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.awaym = "]})) {@ opt.awaym = opt}
+      unless ([$0]) configure
+    }
+    (D) {
+      fmt.hdr.disp_enc new chan mode
+      fmt.av.disp_enc variable opt.cmode
+      fmt.av.disp_enc current $opt.cmode
+      fmt.av.disp_enc description the mode an empty channel gets when you join
+      fmt.av.disp_enc ex +tn
+      fmt.av.disp_enc - if you join #lame2 and there is no one in there this will
+      fmt.av.disp_enc - make the channel +tn
+      fmt.av.disp_enc default "+st"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.cmode = "]})) {@ opt.cmode = opt}
+      unless ([$0]) configure
+    }
+    (E) {
+      fmt.hdr.disp_enc nickcomp char
+      fmt.av.disp_enc variable opt.compc
+      fmt.av.disp_enc current $opt.compc
+      fmt.av.disp_enc description the nick completion character for <TAB> and auto nickcomp
+      fmt.av.disp_enc ex :
+      fmt.av.disp_enc - when you hit <TAB> and it catches nickcomp, then it will type
+      fmt.av.disp_enc - the users nick plus ':', this is also used for auto ncomp
+      fmt.av.disp_enc default ":"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.compc = "]})) {@ opt.compc = opt}
+      unless ([$0]) configure
+    }
+    (F) {
+      fmt.hdr.disp_enc def back msg
+      fmt.av.disp_enc variable opt.backm
+      fmt.av.disp_enc current $opt.backm
+      fmt.av.disp_enc description the message to display to channels when you return
+      fmt.av.disp_enc ex miss me?
+      fmt.av.disp_enc - when you are away and you do /away with no args, "miss me?"
+      fmt.av.disp_enc - will be sent to all the channels you are on via CTCP ACTION
+      fmt.av.disp_enc default "hrm"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.backm = "]})) {@ opt.backm = opt}
+      unless ([$0]) configure
+    }
+    (G) {
+      fmt.hdr.disp_enc def kick msg
+      fmt.av.disp_enc variable opt.kickm
+      fmt.av.disp_enc current $opt.kickm
+      fmt.av.disp_enc description the message to use when you kick a user and none is given
+      fmt.av.disp_enc ex fuck you!
+      fmt.av.disp_enc - /kick lameuser will kick the user with "fuck you!" as the
+      fmt.av.disp_enc - message
+      fmt.av.disp_enc default "wanker"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.kickm = "]})) {@ opt.kickm = opt}
+      unless ([$0]) configure
+    }
+    (H) {
+      fmt.hdr.disp_enc no verbose in
+      fmt.av.disp_enc variable opt.naway
+      fmt.av.disp_enc current $opt.naway
+      fmt.av.disp_enc description channels not to announce away in (* is all, 0 for none)
+      fmt.av.disp_enc ex #lame1 #lame2
+      fmt.av.disp_enc - this will make it so that when you set yourself away the
+      fmt.av.disp_enc - away reason will not be said in "#lame1" and "#lame2"
+      fmt.av.disp_enc default "*"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.naway = "]})) {@ opt.naway = opt}
+      unless ([$0]) configure
+    }
+    (I) {
+      fmt.hdr.disp_enc no tab
+      fmt.av.disp_enc variable opt.notab
+      fmt.av.disp_enc current $opt.notab
+      fmt.av.disp_enc description nickname patterns to not allow in tablist
+      fmt.av.disp_enc ex *serv *dcc* lamekid
+      fmt.av.disp_enc - this won't allow any nicks matching "*serv", "*dcc*", or
+      fmt.av.disp_enc - "lamekid" to go on the tablist
+      fmt.av.disp_enc default "ChanServ NickServ OperServ MemoServ"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.notab = "]})) {@ opt.notab = opt}
+      unless ([$0]) configure
+    }
+    (J) {
+      fmt.hdr.disp_enc def quit msg
+      fmt.av.disp_enc variable opt.quitm
+      fmt.av.disp_enc current $opt.quitm
+      fmt.av.disp_enc description the message to use for quit when none is given
+      fmt.av.disp_enc ex what a waste of time
+      fmt.av.disp_enc - this will make it so when you do /quit, it does "what a waste
+      fmt.av.disp_enc - of time" for your quit message
+      fmt.av.disp_enc default "That's the end of that chapter..."
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.quitm = "]})) {@ opt.quitm = opt}
+      unless ([$0]) configure
+    }
+    (K) {
+      fmt.hdr.disp_enc def user mode
+      fmt.av.disp_enc variable opt.umode
+      fmt.av.disp_enc current $opt.umode
+      fmt.av.disp_enc description user mode to set upon connection
+      fmt.av.disp_enc ex +szcrkfydn
+      fmt.av.disp_enc - next time you connect to a server this will make your mode
+      fmt.av.disp_enc - "+szcrkfydn"
+      fmt.av.disp_enc default "+iws"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.umode = "]})) {@ opt.umode = opt}
+      unless ([$0]) configure
+    }
+    (L) {
+      fmt.hdr.disp_enc wav paths
+      fmt.av.disp_enc variable opt.wpath
+      fmt.av.disp_enc current $opt.wpath
+      fmt.av.disp_enc description the paths that we search when you get a CTCP SOUND request
+      fmt.av.disp_enc ex /usr/lib/sounds /usr/share/sounds
+      fmt.av.disp_enc - if someone gives you a CTCP SOUND request then we will check
+      fmt.av.disp_enc - "/usr/lib/sounds" then "/usr/share/sounds" for the file
+      fmt.av.disp_enc default "~/wav /usr/lib/sounds"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.wpath = "]})) {@ opt.wpath = opt}
+      unless ([$0]) configure
+    }
+    (M) {
+      fmt.hdr.disp_enc wav player
+      fmt.av.disp_enc variable opt.wplay
+      fmt.av.disp_enc current $opt.wplay
+      fmt.av.disp_enc description the wav player to use for CTCP SOUND querys
+      fmt.av.disp_enc ex /usr/local/bin/splay
+      fmt.av.disp_enc - when someone gives you a CTCP SOUND request, we will use
+      fmt.av.disp_enc - "/usr/local/bin/splay" to play it
+      fmt.av.disp_enc default "/usr/local/bin/wavplay"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.wplay = "]})) {@ opt.wplay = opt}
+      unless ([$0]) configure
+    }
+    (N) {
+      fmt.hdr.disp_enc 24 hour clk
+      fmt.av.disp_enc variable opt.24fmt
+      fmt.av.disp_enc current $opt.24fmt
+      fmt.av.disp_enc description use a 24 hour clock? (1=on,0=off)
+      fmt.av.disp_enc default "1"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.24fmt = "]})) {@ opt.24fmt = opt}
+      unless ([$0]) configure
+    }
+    (O) {
+      fmt.hdr.disp_enc auto away
+      fmt.av.disp_enc variable opt.aaway
+      fmt.av.disp_enc current $opt.aaway
+      fmt.av.disp_enc description idle time in minutes to wait before going away (0=off)
+      fmt.av.disp_enc ex 60
+      fmt.av.disp_enc - when you are idle for "60" minutes you will automaticly be
+      fmt.av.disp_enc - marked as away
+      fmt.av.disp_enc default "10"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.aaway = "]})) {@ opt.aaway = opt}
+      unless ([$0]) configure
+    }
+    (P) {
+      fmt.hdr.disp_enc no away on msg
+      fmt.av.disp_enc variable opt.noawayonmsg
+      fmt.av.disp_enc current $opt.noawayonmsg
+      fmt.av.disp_enc description Hide away message from server when you send a user a msg that is away.
+      fmt.av.disp_enc default "1"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.noawayonmsg = "]})) {@ opt.noawayonmsg = opt}
+      unless ([$0]) configure
+    }
+    (Q) {
+      fmt.hdr.disp_enc double statbar
+      fmt.av.disp_enc variable opt.doubl
+      fmt.av.disp_enc current $opt.doubl
+      fmt.av.disp_enc description use a double status bar? (1=on,0=off) 
+      fmt.av.disp_enc default "0"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.doubl = "]})) {@ opt.doubl = opt}
+      unless ([$0]) configure
+    }
+    (R) {
+      fmt.hdr.disp_enc max tablist
+      fmt.av.disp_enc variable opt.maxtab
+      fmt.av.disp_enc current $opt.maxtab
+      fmt.av.disp_enc description max amount of nicknames allowed in tablist at once
+      fmt.av.disp_enc ex 3
+      fmt.av.disp_enc - this will only allow "3" nicknames to be in the tablist
+      fmt.av.disp_enc - concurrently, old nicks get pushed off when new nicks come in
+      fmt.av.disp_enc default "5"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.maxtab = "]})) {@ opt.maxtab = opt}
+      unless ([$0]) configure
+    }
+    (S) {
+      fmt.hdr.disp_enc auto nickcomp
+      fmt.av.disp_enc variable opt.ncomp
+      fmt.av.disp_enc current $opt.ncomp
+      fmt.av.disp_enc description should we use auto nick completion? (1=on,0=off)
+      fmt.av.disp_enc default "0"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.ncomp = "]})) {@ opt.ncomp = opt}
+      unless ([$0]) configure
+    }
+    (T) {
+      fmt.hdr.disp_enc public @+
+      fmt.av.disp_enc variable opt.pubovn
+      fmt.av.disp_enc current $opt.pubovn
+      fmt.av.disp_enc description should we display voice and channel operator status in public msg,notice, and CTCP actions?
+      fmt.av.disp_enc default "0"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.pubovn = "]})) {@ opt.pubovn = opt}
+      unless ([$0]) configure
+    }
+    (U) {
+      fmt.hdr.disp_enc tstamp msgs
+      fmt.av.disp_enc variable opt.stamp
+      fmt.av.disp_enc current $opt.stamp
+      fmt.av.disp_enc description should we timestamp privmsgs & notices? (1=on,0=off)
+      fmt.av.disp_enc default "1"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.stamp = "]})) {@ opt.stamp = opt}
+      unless ([$0]) configure
+    }
+    (V) {
+      fmt.hdr.disp_enc tstamp away
+      fmt.av.disp_enc variable opt.taway
+      fmt.av.disp_enc current $opt.taway
+      fmt.av.disp_enc description add the time when set away to away msgs? (1=on,0=off)
+      fmt.av.disp_enc default "1"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.taway = "]})) {@ opt.taway = opt}
+      unless ([$0]) configure
+    }
+    (W) {
+      fmt.hdr.disp_enc xterm title
+      fmt.av.disp_enc variable opt.title
+      fmt.av.disp_enc current $opt.title
+      fmt.av.disp_enc description should we try and change the xterm bar? (1=on,0=off)
+      fmt.av.disp_enc default "0"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.title = "]})) {@ opt.title = opt}
+      unless ([$0]) configure
+    }
+    (X) {
+      fmt.hdr.disp_enc user mask
+      fmt.av.disp_enc variable opt.umask
+      fmt.av.disp_enc current $opt.umask
+      fmt.av.disp_enc description the mask number to use when banning & ignoring (0-13)
+      fmt.av.disp_enc ex 3
+      fmt.av.disp_enc - this will produce *!*user@*.domain, if you like something
+      fmt.av.disp_enc - else, be my guest :)
+      fmt.av.disp_enc default "3"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.umask = "]})) {@ opt.umask = opt}
+      unless ([$0]) configure
+    }
+    (Y) {
+      fmt.hdr.disp_enc xterm del fix
+      fmt.av.disp_enc variable opt.xdelf
+      fmt.av.disp_enc current $opt.xdelf
+      fmt.av.disp_enc description this swaps the delete key bind with ^? (1=yes,0=no)
+      fmt.av.disp_enc default "0"
+      fmt.hdr.disp_enc
+      if (strlen(${:opt = [$"$$opt.xdelf = "]})) {@ opt.xdelf = opt}
+      unless ([$0]) configure
+    }
+    (Z) {
+      save
+      j.init
+    }
+    (*) {
+      j.init
+    }
+  }
+}
+
+

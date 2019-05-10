@@ -1,0 +1,170 @@
+
+# HELP
+
+@ hlp.size = 0
+
+alias hlp.get {
+  ^local index
+  @ :total = numitems(hlp.data)
+  for (@ index = 0, index < total, @ index++) {
+     @ :temp = getitem(hlp.data $index)
+     
+     if (word(0 $temp) == [$0])
+     {
+       @ function_return = restw(1 $temp)
+       break
+     }
+  }
+}
+
+alias hlp.disp {
+  ^local index
+  @ :total = numitems(hlp.data)
+  for (@ index = 0, index < total, @ index++) {
+     @ :temp = getitem(hlp.data $index)
+     fmt.av.disp_opn $temp
+  }
+}
+
+alias hlp.add {
+  @ setitem(hlp.data $hlp.size $0 $1-)
+  @ hlp.size++
+}
+
+# initialize the help array
+alias act.hlp
+{
+  @ hlp.size = 0
+
+  hlp.add AME Sends a CTCP ACTION to all channels you are on
+  hlp.add AMSG Sends PRIVMSG to all channels you are on
+  hlp.add ANNOY $gay.acp(Talks Like this manG!)
+  hlp.add ANOTICE Sends a NOTICE to all channels you are on
+  hlp.add AWAYLOGS Lists all your awaylogs
+  hlp.add BAN Bans a user from a channel using the defualt mask
+  hlp.add BANKICK Bans then kicks a user from a channel using the defualt mask
+  hlp.add BANS Displays all the bans in a channel
+  hlp.add BINDS Lists all the key bindings that match
+  hlp.add BKI Bans, kicks, then ignores using the default mask
+  hlp.add CANNOY $gay.rcp(Talks Like this manG!)
+  hlp.add CLEANLOGS Deletes all your away logs
+  hlp.add CLEARBANS Unsets all bans on a channel
+  hlp.add CLOSEALL Closes all dcc transfers "with nick" or "of type"
+  hlp.add COUNTRY Converts ISO 3166 country codes to country names and displays
+  hlp.add CYCLE Parts a channel and then rejoins it
+  hlp.add DEBUG Sets the client debugging level
+  hlp.add DICT Interfaces with the DICT client itself, not the server
+  hlp.add DNS Does a DNS lookup on the given address
+  hlp.add DOP Makes user(s) NOT channel operator(s) on a channel
+  hlp.add DOUBLE Toggles double status bar
+  hlp.add EDITALIAS Types out "$(K)ALIAS <alias> <current assignment>" for easy editing
+  hlp.add EDITASSIGN Types out "$(K)ASSIGN <variable> <current assignment>" for easy editing
+  hlp.add EDITSET Types out "$(K)SET <set> <current assignment>" for easy editing
+  hlp.add EDITTOPIC Types out "$(K)TOPIC <channel> <current topic>" for easy editing
+  hlp.add EDT Estimates the time it takes to download a file
+  hlp.add FAKEBAN Bans, unbans, bans, then unbans the default mask to F with bots
+  hlp.add FCR Fakes a CTCP reply to someone
+  hlp.add FILL Makes a channel full by using +l
+  hlp.add FILLKICK Kicks a user from a channel, then make the channel full with +l
+  hlp.add FINGER Frontend to finger(1)
+  hlp.add FRELM Relays a 'fake' received privmsg from a user, with the context you specify
+  hlp.add FRELSM Relays a 'fake' sent privmsg from a user, with the context you specify
+  hlp.add IGNORE Enhanced IGNORE command
+  hlp.add IGNORES Lists all the ignores that match
+  hlp.add INVITE Enhanced INVITE command
+  hlp.add INVITELAST Invites the last person to PRIVMSG you to a channel
+  hlp.add ISFUNCTION Displays wether or not something is a built in client function
+  hlp.add JHELP Display help for J.IRC
+  hlp.add KBI Kicks, bans, then ignores using the default mask
+  hlp.add KEY Sets a channel +k <key>
+  hlp.add KICK Kicks a user from a channel
+  hlp.add KICKALL Kicks a user from all channels
+  hlp.add KICKBAN Kicks then bans a user from a channel using the default mask
+  hlp.add LAG PINGs the server to find out how lagged you really are
+  hlp.add LENGTH Displays the length of a string plus it's length of printable characters
+  hlp.add LK Kicks all -ov users on a channel except for whom you specify
+  hlp.add LOCK Keeps people from being able to change a channel topic
+  hlp.add LONGIP Converts an ip address in dotted quad notation to it's true 32bit format (decimal)
+  hlp.add LV Sets mode +v on all -ov users on a channel except specified nicks
+  hlp.add MATH Evaluates and displays an expression
+  hlp.add MDOP Sets mode -o on all users on a channel except specified nicks
+  hlp.add MDV Sets mode -v on all users on a channel except specified nicks
+  hlp.add MEB Sends a PRIVMSG to everyone on a channel except specified nicks
+  hlp.add MEMO Adds a string to your J.IRC memo file
+  hlp.add MEMOS Displays your J.IRC memo file
+  hlp.add MK Kicks all operators, then non operators in a channel
+  hlp.add MODE Enhanced MODE command
+  hlp.add MOP Sets mode +o on all users on a channel
+  hlp.add MROP Re +o's all channel operators on a channel
+  hlp.add MRV Re +v's all known voiced users on a channel
+  hlp.add MV Sets mode +v on all users on a channel except specified nicks
+  hlp.add NEB Sends a NOTICE to everyone on a channel except specified nicks
+  hlp.add NK Kicks all non operators on a channel except specified nicks
+  hlp.add NV Sets mode +v on all non ops on a channel except specified nicks
+  hlp.add NOLIMIT Sets a channel -l
+  hlp.add NOTAB Adds a pattern to not except on part of the scripts tab completion list
+  hlp.add ONOTICE Sends a NOTICE to all operators on a channel
+  hlp.add OK Kicks all operators on a channel except for you and who ever else you specify
+  hlp.add OP Makes user(s) channel operator(s) in a channel
+  hlp.add OPALL Makes a user a channel operator in all channels you are on
+  hlp.add PAGE Sends a CTCP PAGE request to a user
+  hlp.add PARTALL Parts all channels on a server
+  hlp.add PASTE Pastes the last lines that were printed to the screen
+  hlp.add PLAY Plays the contents of a file to the current channel with a delay
+  hlp.add RBAN Resolves a nickname's host and then bans it with the default mask using the ip
+  hlp.add RELAY Relays previously cached items to the current target
+  hlp.add REPLY Sends a PRIVMSG to the person that last sent one to you
+  hlp.add REVSAY Says a string backwards to the current channel
+  hlp.add SAVE Saves your NOTIFY list,BANNER, and other script settings
+  hlp.add SAYIP Sends a PRIVMSG with your current IP address in dotted quad form
+  hlp.add SAYTIME Says your current local time
+  hlp.add SCAN Displays users on a channel using the cache list
+  hlp.add SHOW Displays users with usernames and hostnames using the cache list
+  hlp.add SOUND Sends a CTCP SOUND request to a user
+  hlp.add SPING Sends a PING to the server
+  hlp.add SVER Shows client and script version to current target
+  hlp.add SVRIP Rips (aka voids) someone elses version and displays it in a channel
+  hlp.add TBAN Lets you interactivly remove channel bans
+  hlp.add TIGNORE Lets you interactivly remove client ignores
+  hlp.add TOGGLE Toggles client SET variables
+  hlp.add UMODE Sets your usermode on the current server
+  hlp.add UNALIAS Unsets an alias
+  hlp.add UNBAN Sets mode -b with anything that would quallify as a match for the specified nickname
+  hlp.add UNIGNORE Removes ignores that match up
+  hlp.add UNKEY Sets mode -k in a channel
+  hlp.add UNLOCK Makes it so users can change the channel topic after a $(K)LOCK
+  hlp.add UNNOTIFY Removes a user from your notify list
+  hlp.add UNSET Unsets a client SET variable
+  hlp.add UNTOPIC Unsets a channel topic
+  hlp.add UUPASTE Uuencodes and then PRIVMSGs a file to a target
+  hlp.add UNVOICE Sets mode -v for user(s) on a channel
+  hlp.add VARECH Displays what arguments are what on the command line
+  hlp.add VERSION Querys either another client or a server with VERSION
+  hlp.add VOICE Sets mode +v for user(s) on a channel
+  hlp.add WALL Compatibility with the BitchX $(K)WALL command
+  hlp.add WHOIS Enhanced /WHOIS command
+  hlp.add WII Send a WHOIS request to the users's server to get the idle time and the rest of WHOIS info
+}
+
+
+## help
+
+alias jhelp {
+  if  (([$0] != [-h])) {
+      ^set continued_line $fmt.av.get_contline()
+      fmt.hdr.disp_opn 13 $j.nicestr Help: $K$0
+
+      if ([$@]) {
+        @ :temp = hlp.get($0)
+        eval echo 36| ${temp ? temp : [No such command]}
+      } else {
+        hlp.disp
+      }
+
+      ^set -continued_line
+      fmt.hdr.disp_opn v$jirc.ver
+  } else {
+    xecho -s -b Usage: JHELP [command]
+  }
+}
+

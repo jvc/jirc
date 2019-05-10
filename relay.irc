@@ -1,0 +1,187 @@
+## relay system - 90
+
+alias frelm {
+  if (([$#] > 1) && ([$0] != [-h])) {
+    if (:uh = _userhost($0)) {
+      msg $T <- [$0\($uh\)] $1-
+    }
+  } else {
+    xecho -s -b Usage: FRELM <nick> <message>
+  }
+}
+
+alias frelsm {
+  if (([$#] > 1) && ([$0] != [-h])) {
+    if (:uh = _userhost($0)) {
+      msg $T -> [msg\($0\)] $1-
+    }
+  } else {
+    xecho -s -b Usage: FRELSM <nick> <message>
+  }
+}
+
+alias relm relay m
+alias relsm relay sm
+alias reln relay n
+alias relsn relay sn
+alias reld relay d
+alias relsd relay sd
+alias relj relay j
+alias relp relay p
+alias relw relay h
+alias relf relay f
+alias rel relay
+alias relay {
+  ^local args $*
+  @ :flag = shift(args)
+  @ :serv = flag =~ [*d] ? [x] : servernum()
+  unless ((findw($flag h w f m sm n sn d sd j l p) == -1) || (findw(-h $*) != -1)) {
+    if (args) {
+      fe ($nums($args)) num {
+        if (:temp = getitem(relay.$(serv).$(flag) ${numitems(relay.$(serv).$(flag)) - num})) {
+          msg $T $temp
+        }
+      }
+    } else {
+      ^local i,temp
+      switch ($flag) {
+        (m) {
+          @ temp = [Messages]
+        }
+        (sm) {
+          @ temp = [Sent Messages]
+        }
+        (n) {
+          @ temp = [Notices]
+        }
+        (sn) {
+          @ temp = [Sent Notices]
+        }
+        (p) {
+          @ temp = [Public Messages & Notices matching *$_n()*]
+        }
+        (d) {
+          @ temp = [DCC Chat Messages]
+        }
+        (sd) {
+          @ temp = [Sent DCC Chat Messages]
+        }
+        (j) {
+          @ temp = [Channel Joins]
+        }
+        (l) {
+          @ temp = [Channel Leaves (parts)]
+        }
+        (h) (w) {
+          @ temp = [Web Sites]
+        }
+        (f) {
+          @ temp = [FTP Sites]
+        }
+      }
+      if (:t = numitems(relay.$(serv).$(flag))) {
+        echo +----+ 57$temp $repeat(${gomx() - (10 + [$@temp])} -)>
+        ^set continued_line -1|    |    -1
+        for (@ i = t, i > 0, @ i--) {
+          echo | 57$pad(-2 0 $i) | $getitem(relay.$(serv).$(flag) ${t - i})
+        }
+        ^set -continued_line
+        echo +----+$repeat(${gomx() - 8} -)>
+      } else {
+        xecho -b No $temp in cache
+      }
+    }
+  } else {
+    xecho -s -b Usage: RELAY [channel|*] <m|sm|n|sn|p|d|sd|j|p|h|f> [number]
+  }
+}
+
+# code base ripped from nutbar
+alias rele paste
+alias paste {
+  unless ([$0] == [-h]) {
+
+    ^local args $*
+
+    @ :stx = chr(127)
+    @ :strip = 0
+    @ :type = 0
+
+    while (option = getopt(optopt optarg "st" $args)) {
+      switch ($option) {
+        ( s ) { @ strip = 1 }
+        ( t ) { @ type = 1 }
+      }
+      @ shift(args)
+    }
+
+    @ :targ = isnumber($strip(- $word(0 $args))) ? T : shift(args)
+
+    if (@args) {
+      fe ($nums($args)) line {
+        if (line = line($line $paste)) {
+          @ setitem(paste $numitems(paste) ${strip ? stripcrap(ALL $after(-1 $stx $stx$line)) : after(-1 $stx $stx$line)})
+        }
+      }
+      fe ($getmatches(paste *)) item {
+        ${type ? [xtype -l] : [msg $targ]} $getitem(paste $item)
+      }
+    } else {
+      @ :gomx = gomx() - 7
+      @ :gomy = gomy() - 3
+      ^set FLOATING_POINT_MATH off
+      fe ($jot(1 $gomy)) line {
+        if (gomy > 0) {
+          if (line = line($line)) {
+            @ setitem(paste $numitems(paste) ${strip ? stripcrap(ALL $after(-1 $stx $stx$line)) : after(-1 $stx $stx$line)})
+            @ gomy -= ((printlen($sar(g/$chr(9)/        /$line)) / gomx) + 1)
+          }
+        }
+      }
+      ^set FLOATING_POINT_MATH on
+      ^local i
+      for (@ i = numitems(paste) - 1, i > -1, @ i--) {
+        echo 36[57$pad(-2 0 ${i + 1})36] $stx$getitem(paste $i)
+      }
+    }
+
+    @ delarray(paste)
+
+  } else {
+    xecho -s -b Usage: PASTE [-t] [target] <number [number[-[number]]]>
+  }
+}
+
+alias rel.add {
+  if (numitems(relay.$0.$1) == opt.maxrel) {
+    @ delitem(relay.$0.$1 0)
+  }
+  if  ([$0] != [x]) {
+    @ setitem(relay.$0.$1 $numitems(relay.$0.$1) $Z $2-)
+  } else {
+    @ setitem(relay.x.$1 $numitems(relay.x.$1) $Z $2-)
+  }
+}
+
+on #-public 90 "% % *ftp\.*" {rel.add $lastserver() f <$0:$1> $2-}
+on #-public_other 90 "% % *ftp\.*" {rel.add $lastserver() f <$0:$1> $2-}
+on #-public 90 "% % *http:*" {rel.add $lastserver() h <$0:$1> $2-}
+on #-public_other 90 "% % *http:*" {rel.add $lastserver() h <$0:$1> $2-}
+on #-public 90 "% % *www\.*" {rel.add $lastserver() h <$0:$1> $2-}
+on #-public_other 90 "% % *www\.*" {rel.add $lastserver() h <$0:$1> $2-}
+on #-msg 90 "*" {rel.add $lastserver() m <- [$0\($userhost()\)] $1-}
+on #-msg_group 90 "*" {rel.add $lastserver() m <- [$0\($userhost()\)] $1: $2-}
+on #-send_msg 90 "*" {rel.add $servernum() sm -> [msg\($0\)] $1-}
+on #-notice 90 "*" {rel.add $lastserver() n <- -$0\($userhost()\)- $1-}
+on #-notice 90 ^"%.%"
+on #-notice 90 ^"% %[%all*"
+on #-send_notice 90 "*" {unless (ischannel($0)) {rel.add $servernum() sn -> -notice\($0\)- $1-}}
+on #-dcc_chat 90 "*" {rel.add x d =$0\(<DCC>\)= $1-}
+on #-send_dcc_chat 90 "*" {rel.add x sd -> =dcc\($0\)= $1-}
+on #-join 90 "*" {rel.add $lastserver() j $banner $0 \($2\) has joined $1}
+on #-leave 90 "*" {rel.add $lastserver() l $0 \($userhost()\) has left $1}
+on #-public 91 '% % *$_n()*' {rel.add $lastserver() p <$0:$1> $2-}
+on #-public_other 91 '% % *$_n()*' {rel.add $lastserver() p <$0:$1> $2-}
+on #-public_msg 91 '% % *$_n()*' {rel.add $lastserver() p <$0:$1> $2-}
+on #-public_notice 91 '% % *$_n()*' {rel.add $lastserver() p -$0:$1- $2-}
+

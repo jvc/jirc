@@ -1,0 +1,54 @@
+## sets
+
+alias act.sets {
+  set AUTO_WHOWAS off
+  set AUTO_RECONNECT on
+  set AUTO_REJOIN on
+  set BANNER ***
+  set CLIENT_INFORMATION J.IRC v$jirc.ver * jealous?
+  set CLOCK_FORMAT ${opt.24fmt ? [%H\:%M] : [%l:%M %p]}
+  set -CONTINUED_LINE
+  set DCC_SLIDING_WINDOW 8
+  set DCC_TIMEOUT 180
+  set DCC_STORE_PATH $twiddle(~)
+  set DISPATCH_UNKNOWN_COMMANDS off
+  set FLOATING_POINT_MATH on
+  set INDENT off
+  set -INPUT_PROMPT
+  set MAIL 2
+  set MANGLE_LOGFILES ansi,bold,color,reverse,underline,blink
+  set MODE_STRIPPER on
+  set MIRC_BROKEN_DCC_RESUME on
+  set LASTLOG 1024
+  set LOG on
+  set LOGFILE $twiddle(~)/.irc.log
+	set NEW_SERVER_LASTLOG_LEVEL none
+  set NO_FAIL_DISCONNECT on
+  set NOTIFY_ON_TERMINATION off
+  set NOTIFY_INTERVAL 50
+  set -QUIT_MESSAGE
+  set REVERSE_STATUS_LINE off
+  set SCROLLBACK 1024
+  set SCROLLBACK_RATIO 99
+  set STATUS_DOES_EXPANDOS on
+  set -QUIT_MESSAGE
+  set QUIT_MESSAGE $opt.quitm
+
+
+  set STATUS_FORMAT $opt.statclr%T[%A%*%=%@%N%#%C%+] %>%Q%M<%4>[%K%R]
+  set STATUS_FORMAT1 $opt.statclr%T[%=%@%N%#%C%+] %>[%3] [win/%R]
+  set STATUS_FORMAT2 $opt.statclr\[%A%*%2] %>%Q%M[lag/%4]
+  set STATUS_MAIL [M/%M] 
+  set STATUS_MODE  (+%+)
+  set STATUS_SCROLLBACK S/
+  set STATUS_QUERY  [Q/%Q] 
+  set STATUS_AWAY A/
+  set STATUS_CLOCK [%T] 
+  set STATUS_CHANNEL ] [%C
+  set STATUS_UMODE  (+%#)
+  set STATUS_USER2 \$S
+  set STATUS_USER3 O:\$chn.o N:\$chn.n V:\$chn.v
+  set STATUS_USER4 \$lag[\$winserv()]
+  set SWITCH_CHANNELS_BETWEEN_WINDOWS on
+  set WORD_BREAK ,;
+}

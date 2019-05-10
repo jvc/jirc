@@ -1,0 +1,48 @@
+
+## notices
+
+alias anotice {
+  if ([$#]) {
+    fe ($mychannels()) t0 t1 t2 t3 {
+      notice $tr(/ /,/$remts($t0 $t1 $t2 $t3)) $*
+    }
+  } else {
+    xecho -s -b Usage: ANOTICE <text>
+  }
+}
+
+alias onotice {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    ^notice @$chan $args
+  } else {
+    xecho -s -b Usage: ONOTICE [channel|*] <text>
+  }
+}
+
+alias wall {
+  if (@) {
+    ^local args $*
+    @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+    if (args) {
+      hook bwall $winserv() $chan $N $args
+      ^notice @$chan [Wall/$chan] $args
+    }
+  } else {
+    xecho -s -b Usage: WALL [channel|*] <text>
+  }
+}
+
+alias neb {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  @ :nicks = shift(args)
+  if (@args) {
+    fe ($remws($split(, $nicks) / $onchannel($chan))) t0 t1 t2 t3 t4 t5 t6 t7 t8 t9 {
+      ^notice $t0,$t1,$t2,$t3,$t4,$t5,$t6,$t7,$t8,$t9 [NOTICE to all but $nicks on $chan] $args
+    }
+  } else {
+    xecho -s -b Usage: NEB [channel|*] <nickname[,s]> <text>
+  }
+}

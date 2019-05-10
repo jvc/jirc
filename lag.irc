@@ -1,0 +1,39 @@
+## lag - 100
+
+# code base ripped from nutbar, it's just so good..
+
+alias lag {
+  unless ([$0] == [-h]) {
+    @ tmp.lag = 1
+    xecho -b Querying $S to calculate lag time..
+    quote PING lag_$time()
+  } else {
+    xecho -s -b Usage: LAG [server]
+  }
+}
+
+alias get_lag {
+   @ :ref = servernum($0)
+   if (ref > -1 && isconnected($ref)) {
+      @ lag[$ref] = [*]
+      parsekey refresh_status
+      xeval -s $ref {quote PING lag_$time()}
+   }
+}
+
+on ^pong "% % lag_%" {
+  @ :ref = servernum($0)
+  @ lag[$ref] = time() - after(_ $2)
+  if (lag[$ref] > 25) xecho -b 57Warning: Lag time exceeds 25 seconds! 36\(-1$K\LAG for an update36\)
+  if ($opt.lagdl) ^timer -ref lag_$ref $opt.lagdl get_lag $0
+    parsekey refresh_status
+}
+on #-connect 100 "*" {get_lag $0}
+on #-pong 100 "% % lag_%" {
+  if (tmp.lag) {
+    xecho -b You are lagged $tdiff(${time() - after(_ $2)})
+    ^assign -tmp.lag
+  }
+}
+
+

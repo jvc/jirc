@@ -1,0 +1,41 @@
+## dcc
+
+alias dmsg msg =$*
+alias dquery query =$*
+alias dsend dcc send
+
+alias closeall {
+  unless ([$0] == [-h]) {
+    if (findw($0 GET SEND RAW CHAT) != -1) {
+      dcc close * $0
+    } elsif (@) {
+      dcc close ${[$0] =~ [-*] ? rest(1 $0) : [$0]} *
+    } else {
+      dcc closeall
+    }
+  } else {
+    xecho -s -b Usage: CLOSEALL [type|[-]nickname]
+  }
+}
+
+alias get dcc get ${[$#] ? [$0] : pend.get(dget))}
+alias noget dcc close get ${[$#] ? [$0] : pend.get(dget))}
+alias chat dcc chat ${[$#] ? [$0] : pend.get(dchat))}
+alias nochat dcc close chat ${[$#] ? [$0] : pend.get(dchat))}
+
+
+## active dcc chat list
+
+alias add_chat {@ setitem(chats $numitems(chats) $*)}
+alias rem_chat {@ delitem(chats $finditem(chats $*))}
+alias get_chats {
+  fe (getmatches(chats $0)) temp {
+    push function_return $getitem(chats $temp)
+  }
+  @ function_return = uniq($function_return)
+}
+
+on #-dcc_connect 50 "% chat*" {add_chat $0}
+on #-dcc_lost 50 "% chat*" {rem_chat $0}
+
+

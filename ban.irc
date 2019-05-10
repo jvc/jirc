@@ -1,0 +1,312 @@
+
+## bans
+
+# to: krisp
+alias bki {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :nick = shift(args)
+      @ :reason = args ? args : opt.kickm
+      if (onchannel($nick $chan)) {
+        if (:uh = _mask($_userhost($nick))) {
+          //mode $chan -o+b $nick $uh
+          //kick $chan $nick $reason
+          //ignore $uh ALL
+        }
+      } else {
+        ban $nick
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: BKI [channel|*] <nickname> [comment]
+  }
+}
+
+# to: krisp
+alias kbi {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :nick = shift(args)
+      @ :reason = args ? args : opt.kickm
+      if (onchannel($nick $chan)) {
+        if (:uh = _mask($_userhost($nick))) {
+          //kick $chan $nick $reason
+          //mode $chan +b $uh
+          //ignore $uh ALL
+        }
+      } else {
+        ban $nick
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: KBI [channel|*] <nickname> [comment]
+  }
+}
+
+# resolve ban
+alias rban {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :targ = shift(args)
+      if (index(*?!@ $targ) == -1) {
+        if (:uh = _userhost($targ)) {
+          if (onchannel($targ $chan)) {
+            //mode $chan -o+b $targ $_mask($before(@ $uh)@$nametoip($after(@ $uh)))
+          } else {
+            //mode $chan +b $_mask($before(@ $uh)@$nametoip($after(@ $uh)))
+          }
+        }
+      } else {
+        ban $chan $targ
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: RBAN [channel|*] <nickname>
+  }
+}
+
+# this is for lamo eggdrops
+alias fakeban {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if ((:targ = shift(args))) {
+    if (ischanop($N $chan)) {
+      if (:uh = index(*?!@ $targ) != -1 ? targ : _mask($_userhost($targ))) {
+        //mode $chan +b-b+b-b $uh $uh $uh $uh
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: FAKEBAN [channel|*] <nickname|mask>
+  }
+}
+
+alias ban {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :targ = shift(args)
+      if (index(*?!@ $targ) == -1) {
+        if (:uh = _mask($_userhost($targ))) {
+          if (onchannel($targ $chan)) {
+            //mode $chan -o+b $targ $uh
+          } else {
+            //mode $chan +b $uh
+          }
+        }
+      } else {
+        //mode $chan +b $targ
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: BAN [channel|*] <nickname|mask>
+  }
+}
+
+alias unban {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if ((:targ = shift(args))) {
+    if (ischanop($N $chan)) {
+      if (index(*?!@ $targ) == -1) {
+        if (:uh = _userhost($targ)) {
+          ^local passed
+          @ :host = after(@ $uh)
+          unless (isnumber($strip(. $host))) {
+            push uh $before(@ $uh)@$nametoip($host)
+          }
+          @ :bans = ban.get_all($servernum() $chan)
+          fe ($uh) temp {
+            if (:match = rpattern($uh $bans)) {
+              push passed $match
+            }
+          }
+          mode $chan -$repeat($#passed b) $passed
+        } else {
+          xecho -s -b No such nick: $targ
+        }
+      } else {
+        //mode $chan -b $targ
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: UNBAN [channel|*] <nickname|pattern>
+  }
+}
+
+alias bans {
+  unless ([$0] == [-h]) {
+    ^local args $*
+    if (:chan = ischannel($0) ? shift(args) : C) {
+      @ :serv = servernum()
+      unless (onchannel($N $chan)) {
+        wait for {//mode $chan +b}
+        ban.rem_all $serv $chan
+      } else {
+        ban.show_all $serv $chan
+      }
+    }
+  } else {
+    xecho -s -b Usage: BANS [channel|*]
+  }
+}
+
+alias bk bankick
+alias bankick {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :nick = shift(args)
+      @ :reason = args ? args : opt.kickm
+      if (onchannel($nick $chan)) {
+        if (:uh = _mask($_userhost($nick))) {
+          //mode $chan -o+b $nick $uh
+          //kick $chan $nick $reason
+        }
+      } else {
+        ban $nick
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: BANKICK [channel|*] <nickname> [comment]
+  }
+}
+
+alias kb kickban
+alias kickban {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  if (args) {
+    if (ischanop($N $chan)) {
+      @ :nick = shift(args)
+      @ :reason = args ? args : opt.kickm
+      if (onchannel($nick $chan)) {
+        if (:uh = _mask($_userhost($nick))) {
+          //kick $chan $nick $reason
+          //mode $chan +b $uh
+        }
+      } else {
+        ban $nick
+      }
+    } else {
+      xecho -b 36[-1$chan36] not a channel operator
+    }
+  } else {
+    xecho -s -b Usage: KICKBAN [channel|*] <nickname> [comment]
+  }
+}
+
+alias tban {
+  unless ([$0] == [-h]) {
+    if (:chan = ischannel($0) ? [$0] : C) {
+      bans $chan
+      if (ischanop($N $chan)) {
+        if (numitems(bans.$servernum().$chan)) {
+          @ :in = [$"Remove which ban (#/*) "]
+          if (:in != [\*]) {
+            if (:ban = word(0 $ban.get($servernum() $chan ${in -  1}))) {
+              unban $chan $ban
+            } else {
+              xecho -b 36[-1$chan36] No such ban
+            }
+          } else {
+            clearbans $chan
+          }
+        }
+      } else {
+        xecho -b 36[-1$chan36] not a channel operator
+      }
+    }
+  } else {
+    xecho -s -b Usage: TBAN [channel|*]
+  }
+}
+
+alias clearbans {
+  unless ([$0] == [-h]) {
+    if (:chan = ischannel($0) || [$0] == [*] ? shift(args) : C) {
+      if (ischanop($N $chan)) {
+        if (:bans = ban.get_all($servernum() $chan)) {
+          mode $chan -$repeat($#bans b) $bans
+        }
+      } else {
+        xecho -b 36[-1$chan36] not a channel operator
+      }
+    }
+  } else {
+    xecho -s -b Usage: CLEARBANS [channel|*]
+  }
+}
+
+# Not f'in bad if I do say so myself. Which I do, I say it all the time.
+
+alias ban.literal {@ function_return = msar(g/\*/\\*/%/\\%/?/\\?/$*)}
+
+alias ban.show_all {
+  if (:t = numitems(bans.$0.$1)) {
+    ^local i
+    xecho -s 36+----+ 57Ban 36------------------------------- 57Set by 36--------- 57Date 36--- 57Time 36---+
+    for (@ i = 0, i < t, @ i++) {
+      @ :temp = ban.get($0 $1 $i)
+      @ :w1 = word(1 $temp)
+#      @ :by = w1 =~ [*!*] ? before(1 ! $w1) : w1
+      @ :by = w1
+      fmt.str.disp_enc 57$pad(-2 0 ${i + 1}) 36|-1 $[35]word(0 $temp) $[15]by  $strftime($word(2 $temp) %D %X)
+    }
+    xecho -s 36+----+$repeat(71 -)+
+
+  } else {
+    xecho -s -b 36[-1$136] No bans found
+  }
+}
+
+alias ban.add {
+  @ :ban = tolower($2)
+  if (matchitem(bans.$0.$1 $ban.literal($ban) % %) < 0) {
+    @ setitem(bans.$0.$1 $numitems(bans.$0.$1) $ban $3 $4)
+  }
+}
+alias ban.rem {@ delitem(bans.$0.$1 $matchitem(bans.$0.$1 $ban.literal($tolower($2)) % %))}
+alias ban.rem_all {@ delarray(bans.$0.$1)}
+alias ban.get {@ function_return = getitem(bans.$0.$1 $2)}
+alias ban.get_all {
+  ^local i
+  @ :t = numitems(bans.$0.$1)
+  for (@ i = 0, i < t, @ i++) {
+     push function_return $word(0 $getitem(bans.$0.$1 $i))
+  }
+}
+
+on ^367 "*" {ban.add $servernum($0) $1-}
+on ^368 "*" {@tmp.noborder = [];ban.show_all $servernum($0) $2}
+on #-join 40 '$_n() *' {
+  @ tmp.noborder = 1
+  ban.rem_all $lastserver() $1
+  ^quote MODE $1 +b
+}
+on #-mode_stripped 40 "% % +b *" {ban.add $lastserver() $1 $3 ${[$0] !~ [*.*] ? userhost($0) : []} $time()}
+on #-mode_stripped 40 "% % -b *" {ban.rem $lastserver() $1 $3}
+on #-leave 40 '$_n() *' ban.rem_all $lastserver() $1
+on #-kick 40 '$_n() *' ban.rem_all $lastserver() $2
+on #-channel_signoff 40 '% $_n() *' ban.rem_all $lastserver() $0

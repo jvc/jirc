@@ -1,0 +1,380 @@
+## tab completion
+alias bks repeat $@ parsekey backspace
+
+alias onchannels {
+  fe ($mychannels($0)) chan {
+    push function_return $onchannel($chan)
+  }
+  @ function_return = uniq($function_return)
+}
+
+alias checkchannels {
+  @ :temp = pattern($0% $onchannel())
+  @ function_return = temp ? temp : pattern($0% $onchannels())
+}
+
+alias nickcomp {
+  @ :nick = strip(: $0)
+  @ function_return = (iscurchan($T) && (:temp = word(0 $pattern($nick* $onchannel()))) ? temp : nick) ## opt.compc
+}
+
+# good for pr0n spammers... actually maybe that's the http grabbers job ;p
+alias notab {
+  if ([$#]) {
+    @ opt.notab = uniq($push(opt.notab $*))
+  } else {
+    xecho -s -b Usage: NOTAB <pattern>
+  }
+}
+
+alias str.longest {
+  @ function_return = 0
+  fe ($*) word {
+    @ function_return = (@word > @function_return)  ? word : function_return 
+  }
+}
+
+alias tab.possible {
+  unless (msc.lastl == curpos() ## L) {
+    beep
+    @ msc.lastl = curpos() ## L
+  } else {
+    xecho -b $# Possible Completions:
+    fe ($*) t.0 t.1 t.2 t.3 t.4 {
+      xecho -b $[-14]t.0 $[-14]t.1 $[-14]t.2 $[-14]t.3 $[-14]t.4
+    }
+  }
+}
+
+alias tab.type {
+  if ([$#] > 2) {
+    xtype -literal $prefix($1-)
+    tab.possible $1-
+  } else {
+    xtype -literal $1${[$0] ? [ ] : []}
+  }
+}
+
+
+alias tab.complete {
+  @ :cpos = curpos()
+  @ :bpos = left($cpos $L)
+  @ :wspc = mid($cpos 1 $L) != [ ]
+  switch ($bpos) {
+    () {
+      @ :temp = tab.get_l($servernum())
+      xtype -literal $K${[$#]temp ? temp : [msg]}${[ ]} 
+    }
+    ($(K)%) ($K$(K)%) {
+      parsekey command_completion
+    }
+    ($(K)msg${[ ]}) ($(K)msg %${[ ]}) ($(K)notice %${[ ]}) {
+      @ :temp = tab.get($servernum())
+      parsekey erase_line
+      xtype -literal $K${[$#]temp ? temp : [msg]}${[ ]}
+    }
+    ($(K)xdebug *) {
+      @ :word = strip(+- $rightw(1 $bpos))
+      if (:temp = pattern($word* LOCAL_VARS ALIAS CHANNELS CTCPS DCC_SEARCH OUTBOUND INBOUND DCC_XMIT WAITS MEMORY SERVER_CONNECT CRASH COLOR NOTIFY REGEX REGEX_DEBUG BROKEN_CLOCK UNKNOWN BOLD_HELPER NEW_MATH NEW_MATH_DEBUG AUTOKEY ALL)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)unban %!%) {
+      @ :word = word(1 $bpos)
+      if (:temp = pattern($literal($word)* $ban.get_all($servernum() $C))) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)unban % %!%) {
+      @ :word = word(2 bpos)
+      if (:temp = pattern($word* $ban.get_all($servernum() $word(1 $bpos)))) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)notify *,-%) ($(K)unnotify *,%) {
+      @ :word = strip(- $after(-1 ,$bpos))
+      if (:temp = pattern($word* $notify())) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)notify *-%) ($(K)unnotify *) {
+      @ :word = strip(- $word(1 $bpos))
+      if (:temp = pattern($word* $notify())) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)editassign %) ($(K)assign %) ($(K)assign -%) {
+      @ :word = strip(- $word(1 $bpos))
+      if (:temp = aliasctl(assign match $word*)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)alias %) ($(K)alias -%) ($(K)edit %) ($(K)editalias %) ($(K)unalias %) {
+      @ :word = strip(- $word(1 $bpos))
+      if (:temp = aliasctl(alias match $word)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)set -%) ($(K)set %) ($(K)edits %) ($(K)tog% %) {
+      @ :word = strip(- $word(1 $bpos))
+      if (:temp = _getsets($word*)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)rig %) ($(K)rignore %) ($(K)unig %) ($(K)unignore %) {
+      @ :word = word(1 $bpos)
+      if (:temp = igmask($word*)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    ($(K)cd %) ($(K)cmp *) ($(K)diff *) ($(K)diff3 *) ($(K)sdiff *) ($(K)rm *) ($(K)ls *) ($(K)mv *) ($(K)cp *) ($(K)dd *) ($(K)ln *) ($(K)du *) ($(K)del *) ($(K)delete *) ($(K)lsl *) ($(K)dir *) ($(K)vdir *) ($(K)md *) ($(K)mkdir *) ($(K)mknod % % *) ($(K)chown *) ($(K)chgrp *) ($(K)chmod *) ($(K)rd *) ($(K)rmdir *) ($(K)touch *) ($(K)cat *) ($(K)exec *) ($(K)dsend % *) ($(K)dcc send % *) ($(K)load %) {
+      @ :word = rightw(1 $bpos)
+      if (:temp = glob($word*)) {
+        bks $word
+        tab.type ${right(1 $temp) != [/] ? wspc : 0} $temp
+      }
+    }
+    (*$$%) {
+      @ :word = strip($$ $rightw(1 $bpos))
+      @ :ass = aliasctl(assign match $word)
+      if (:temp = ass ? ass : _getsets($word*)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    (*,=%) ($(K)dmsg *,%) ($(K)dm *,%) {
+      @ :word = strip(= $after(-1 , $bpos))
+      if (:temp = get_chats($word*)) {
+        bks $word
+        tab.type 0 $temp
+      }
+    }
+    ($(K)dcc close chat %) ($(K)nochat %) {
+      @ :word = rightw(1 $bpos)
+      if (:temp = (get_chats($word*) ## [ ] ## pend.get_all(dchat $word*))) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    (*=%) ($(K)dm %) ($(K)dmsg %) ($(K)dq %) ($(K)dquery %) {
+      @ :word = strip(= $rightw(1 $bpos))
+      if (:temp = get_chats($word*)) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    (*,#%) (*,&%) (*,+%) {
+      @ :word = after(-1 , $bpos)
+      if (:temp = pattern($word* $mychannels())) {
+        bks $word
+        tab.type 0 $temp
+      }
+    }
+    (*#%) (*&%) (*+%) ($(K)inv% % %) ($(K)i % %) {
+      @ :word = rightw(1 $bpos)
+      if (:temp = pattern($word* $mychannels())) {
+        bks $word
+        tab.type $wspc $temp
+      }
+    }
+    (*,%) {
+      @ :word = after(-1 , $bpos)
+      if (:temp = checkchannels($word)) {
+        bks $word
+        tab.type 0 $temp
+      }
+    }
+    (%$opt.compc) {
+      xtype -literal ${wspc ? [ ] : []}
+    }
+    (*!) {
+      if (:temp = before(! $rightw(1 $bpos))) {
+        xtype -literal $after(! $_userhost($temp))$wspc
+      }
+    }
+    (%) {
+      @ :word = word(0 $bpos)
+      if (:temp = checkchannels($word)) {
+        bks $word
+        if (#temp > 1) {
+          xtype -literal $prefix($temp)
+          tab.possible $temp
+        } else {
+          xtype -literal $temp$opt.compc${wspc ? [ ] : []}
+        }
+      }
+    }
+    (*) {
+      @ :word = tr(€ €€$rightw(1 $bpos))
+      if (:temp = checkchannels($word)) {
+        bks $word
+        tab.type $wspc $temp
+      } elsif (:temp = glob($word*)){
+        bks $word
+        tab.type ${right(1 $temp) != [/] ? wspc : 0} $temp
+      }
+    }
+  }
+}
+
+
+## tab completion cache
+
+alias tab.swap if (msc.tablist =~ [*.$0*]) {@ msc.tablist = sar(g/.$0 /.$1 /$msc.tablist)}
+
+alias tab.add {
+  @ msc.tabnum = -1
+  unless (rmatch($1 $opt.notab)) {
+    @ msc.tablist = uniq($unshift(msc.tablist $0.$1))
+    if (#msc.tablist > opt.maxtab) {
+      pop msc.tablist
+    }
+  }
+}
+
+alias tab.del_cur {
+  if (:temp = word(${msc.tabnum == -1 ? 0 : !msc.tabnum ? #msc.tablist - 1 : msc.tabnum - 1} $msc.tablist)) {
+    @ msc.tablist = remw($temp $msc.tablist)
+    @ msc.tabnum--
+    xecho -b Removed "$K$split(. $temp)" from tablist
+    tab.complete
+  }
+}
+
+alias tab.del if (msc.tablist =~ [*.$1*]) {@ msc.tablist = filter(%.$0 $msc.tablist)}
+
+alias tab.get {
+  @ msc.tabnum += msc.tabnum == -1
+  @ function_return = split(. $word($msc.tabnum $msc.tablist))
+  if (msc.tabnum + 1 < #msc.tablist) {
+    @ msc.tabnum++
+  } else {
+    @ msc.tabnum = 0
+  }
+}
+
+alias tab.get_l {
+  if (msc.tabnum < 0) {
+    @ function_return = split(. $word(0 $msc.tablist))
+    if (#msc.tablist < 2) {
+      @ msc.tabnum = 0
+    } else {
+      @ msc.tabnum += 2
+    }
+  } elsif (msc.tabnum) {
+    @ function_return = split(. $word(${msc.tabnum - 1} $msc.tablist))
+  } else {
+    @ function_return = split(. $word(${#msc.tablist - 1} $msc.tablist))
+  }
+}
+
+on #-channel_signoff 10 "*" {tab.del $1}
+on #-channel_nick 10 "*" {tab.swap $1-}
+on #-dcc_chat 10 "*" {tab.add msg =$0}
+on #-dcc_connect 10 "% chat *" {tab.add msg =$0}
+on #-dcc_lost 10 "% chat*" {tab.del =$0}
+on #-msg 10 "*" {tab.add msg $0}
+on #-msg_group 10 "*" {tab.add msg $0}
+#on #-notice 10 "*" tab.add notice $0
+#on #-notice 10 ^"% %[%all*"
+#on #-notice 10 ^"%.% *"
+on #-send_dcc_chat 10 "*" {tab.add msg =$0}
+on #-send_msg 10 "*" {tab.add msg $0}
+on #-send_notice 10 "*" {tab.add notice $0}
+on #-send_notice 10 ^"% .Wall.%. *"
+on #-send_public 10 "*" {if (lasti =~ [$K*] && lasti !~ [\/\/*]) tab.add msg $0}
+
+## tab completion cache
+
+alias tab.swap if (msc.tablist =~ [*.$0*]) {@ msc.tablist = sar(g/.$0 /.$1 /$msc.tablist)}
+
+alias tab.add {
+  @ msc.tabnum = -1
+  unless (rmatch($1 $opt.notab)) {
+    @ msc.tablist = uniq($unshift(msc.tablist $0.$1))
+    if (#msc.tablist > opt.maxtab) {
+      pop msc.tablist
+    }
+  }
+}
+
+alias tab.del_cur {
+  if (:temp = word(${msc.tabnum == -1 ? 0 : !msc.tabnum ? #msc.tablist - 1 : msc.tabnum - 1} $msc.tablist)) {
+    @ msc.tablist = remw($temp $msc.tablist)
+    @ msc.tabnum--
+    xecho -b Removed "$K$split(. $temp)" from tablist
+    tab.complete
+  }
+}
+
+alias tab.del if (msc.tablist =~ [*.$1*]) {@ msc.tablist = filter(%.$0 $msc.tablist)}
+
+alias tab.get {
+  @ msc.tabnum += msc.tabnum == -1
+  @ function_return = split(. $word($msc.tabnum $msc.tablist))
+  if (msc.tabnum + 1 < #msc.tablist) {
+    @ msc.tabnum++
+  } else {
+    @ msc.tabnum = 0
+  }
+}
+
+alias tab.get_l {
+  if (msc.tabnum < 0) {
+    @ function_return = split(. $word(0 $msc.tablist))
+    if (#msc.tablist < 2) {
+      @ msc.tabnum = 0
+    } else {
+      @ msc.tabnum += 2
+    }
+  } elsif (msc.tabnum) {
+    @ function_return = split(. $word(${msc.tabnum - 1} $msc.tablist))
+  } else {
+    @ function_return = split(. $word(${#msc.tablist - 1} $msc.tablist))
+  }
+}
+
+on #-channel_signoff 10 "*" {tab.del $1}
+on #-channel_nick 10 "*" {tab.swap $1-}
+on #-dcc_chat 10 "*" {tab.add msg =$0}
+on #-dcc_connect 10 "% chat *" {tab.add msg =$0}
+on #-dcc_lost 10 "% chat*" {tab.del =$0}
+on #-msg 10 "*" {tab.add msg $0}
+on #-msg_group 10 "*" {tab.add msg $0}
+#on #-notice 10 "*" tab.add notice $0
+#on #-notice 10 ^"% %[%all*"
+#on #-notice 10 ^"%.% *"
+on #-send_dcc_chat 10 "*" {tab.add msg =$0}
+on #-send_msg 10 "*" {tab.add msg $0}
+on #-send_notice 10 "*" {tab.add notice $0}
+on #-send_notice 10 ^"% .Wall.%. *"
+on #-send_public 10 "*" {if (lasti =~ [$K*] && lasti !~ [\/\/*]) tab.add msg $0}
+
+## pending operations cache - currently dcc chat and dcc get
+
+alias pend.add {@ setitem(pend.$0 $numitems(pend.$0) $1-)}
+alias pend.del {@ delitem(pend.$0 $finditem(pend.$0 $1-))}
+alias pend.get {@ function_return = getitem(pend.$0 ${numitems(pend.$0) - 1})}
+alias pend.get_all {
+  fe (getmatches(pend.$0 $1)) temp {
+    push function_return $getitem(pend.$0 $temp)
+  }
+  @ function_return = uniq($function_return)
+}
+
+on #-dcc_request 20 "% chat*" {pend.add dchat $0}
+on #-dcc_connect 20 "% chat*" {pend.del dchat $0}
+on #-dcc_lost 20 "% chat*" {pend.del dchat $0}
+on #-dcc_request 20 "% send*" {pend.add dget $0}
+on #-dcc_connect 20 "% get*" {pend.del dget $0}
+
+

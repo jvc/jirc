@@ -1,0 +1,1081 @@
+/* J.IRC ircII EPIC4
+**
+** A Multi-purpose script by jvc on EFnet
+**
+** jchouinard@jvic.com
+*/
+
+if (!epic() || bitchx()) {
+  echo *** J.IRC is for ircII-EPIC only. It is recommended that you get the latest release of ircII-EPIC4 and use that. *****
+  sleep 10
+}
+
+if (V < 20080904) {
+  echo *** Please upgrade your version of epic4 to EPIC4-2.10.1 
+  sleep 10
+}
+
+unless (j.irc()) {
+  ^dump all
+  ^bind -default
+}
+
+# <release>.<major>.<minor>
+@ jirc.ver = [7.0.1]
+
+# J.IRC options, try /configure
+@ opt.24fmt = 1
+@ opt.ajinv = 0
+@ opt.aaway = 10
+@ opt.doubl = 0
+@ opt.maxtab = 5
+@ opt.lagdl = 0
+@ opt.ncomp = 0
+@ opt.stamp = 0
+@ opt.taway = 1
+@ opt.title = 0
+@ opt.umask = 3
+@ opt.xdelf = 0
+@ opt.pubovn = 0
+@ opt.maxrel = 20
+@ opt.statclr = [57,44]
+@ opt.noawayonmsg = 1
+
+@ opt.adget = [*.zip *.jpg *.gif *.mp3 *.mp2]
+@ opt.ajoin = []
+@ opt.awaym = [with ym]
+@ opt.cmode = [+st]
+@ opt.compc = [:]
+@ opt.elect = []
+@ opt.backm = [hey now]
+@ opt.kickm = [wanker]
+@ opt.naway = [*]
+@ opt.notab = [ChanServ NickServ OperServ MemoServ]
+@ opt.quitm = [And that's the end of that chapter...]
+@ opt.umode = [+iws]
+@ opt.wpath = [~/wav /usr/lib/sounds]
+@ opt.wplay = [/usr/local/bin/wavplay]
+
+# load the saved settings
+if (fexist(~/.jircrc) == 1) {
+  ^load ~/.jircrc
+} else {
+  xecho -b Looks like $twiddle(~)/.jircrc is absent, type $(K)CONFIGURE to set one up!
+}
+
+# what the function keys execute
+@ key.01 = [scan o]
+@ key.02 = [scan n]
+@ key.03 = [show o]
+@ key.04 = [show n]
+@ key.05 = [echo F5 Pressed]
+@ key.06 = [echo F6 Pressed]
+@ key.07 = [echo F7 Pressed]
+@ key.08 = [echo F8 Pressed]
+@ key.09 = [echo F9 Pressed]
+@ key.10 = [echo F10 Pressed]
+@ key.11 = [echo F11 Pressed]
+@ key.12 = [echo F12 Pressed]
+
+# other bindings
+@ key.hom = [BEGINNING_OF_LINE]
+@ key.ins = [QUOTE_CHARACTER]
+@ key.del = [DELETE_CHARACTER]
+@ key.end = [END_OF_LINE]
+@ key.pup = [SCROLL_BACKWARD]
+@ key.pdn = [SCROLL_FORWARD]
+
+@ j.nicestr = [J.IRC]
+
+alias uupaste {
+  @ :file = [$@1] ? [$1] : [$0]
+  @ :targ = [$@1] ? [$0] : T
+  
+  if (@file && @targ && [$0] != [-h]) {
+    if (fexist($file) == 1) {
+      exec -m $targ uuencode $file $file
+    } else {
+      xecho -s -b Error opening file "$file"
+    }
+  } else {
+    xecho -s -b Usage: UUPASTE [target] <file>
+  }
+}
+
+# cat file to target
+alias play {
+  if ((:file = [$0])) {
+    if (T) {
+      if (fexist($file) == 1) {
+        @ :int = 0
+        @ :delay = [$1] ? [$1] : 5
+        @ :fd = open($file R)
+        until (eof($fd)) {
+          @ :temp = read($fd)
+          unless (eof($fd)) {
+            //msg $T $temp
+            if (int == delay) {
+              ^pause $delay
+              @ int = 0
+            } else {
+              @ int++
+            }
+          }
+        }
+        @ close($fd)
+      } else {
+        xecho -s -b Error opening file "$file"
+      }
+    }
+  } else {
+    xecho -s -b Usage: PLAY <file> [delay]
+  }
+}
+
+# if you have the dict client installed
+alias dict {
+  if ([$#]) {
+    exec -w dict $*
+  } else {
+    xecho -s -b Usage: DICT <args>
+  }
+}
+
+alias sayip {
+  unless ([$0] == [-h]) {
+    rmsg ${[$#] ? [$0] : [$T]} $nametoip($after(@ $X))
+  } else {
+    xecho -s -b Usage: SAYIP [target]
+  }
+}
+
+
+alias unlock {
+  unless ([$0] == [-h]) {
+    if (:chan = ischannel($0) ? [$0] : C) {
+      ^assign -msc.locked[$winserv()][$encode($tolower($chan))]
+    }
+  } else {
+    xecho -s -b Usage: UNLOCK [channel]
+  }
+}
+
+alias join {
+  ^local string
+  fe ($split(, $tr(Ä ÄÅÄ$*))) temp {
+    switch ($word(0 $split(Å $temp))) {
+      (0) {
+        //^join 0
+        return
+      }
+      (+%) (#%) (&%) (-i%) {
+        @ string #= [,$temp]
+      }
+      (*) {
+        @ string #= [,#$temp]
+      }
+    }
+  }
+  //^join $rest(1 $split(Å $string))
+}
+
+alias cycle {
+  ^local args $*
+  unless ([$0] == [-h]) {
+    ^stack push on switch_channels
+    if (:chan = ischannel($0) ? shift(args) : C) {
+      @ :old = C
+      if (onchannel($N $chan)) {
+        @ :key = _key($chan)
+        @ :chr = left(1 $chanmode($chan))
+        if ((chr == [i]) && (findw(-f $args) == -1)) {
+          xecho -b Cannot cycle $chan 36\(+i36\)
+        } else {
+          wait for {quote PART $chan$chr(13 10)JOIN $chan $key}
+        }
+      }
+    }
+    ^stack pop on switch_channels 
+  } else {
+    xecho -s -b Usage: CYCLE [-f] [channel]
+  }
+}
+
+alias names //names ${[$#] ? [$*] : C}
+
+alias country {
+  if ([$#]) {
+    xecho -b $toupper($0) is $j.country_get($0)
+  } else {
+    xecho -s -b Usage: COUNTRY <country-code>
+  }
+}
+
+alias longip {
+  if ([$#]) {
+    if (count(. $0) == 3) {
+      @ :ip = split(. $0)
+      @ function_return = (word(0 $ip) * 16777216) + (word(1 $ip) * 65536) + (word(2 $ip) * 256) + word(3 $ip)
+    } else {
+      @ function_return = 0
+    }
+    unless (functioncall()) {
+      xecho -b $0 is $function_return
+    }
+  } else {
+    xecho -s -b Usage: LONGIP <ip-address>
+  }
+}
+
+alias nslookup dns
+alias dns {
+  if ([$#]) {
+    if (:targ = index(. $0) != -1 ? [$0] : after(@ $_userhost($0))) {
+      @ :temp = convert($targ)
+      xecho -b $targ does ${temp ? temp : [not resolve]}
+    } else {
+      xecho -b $0 does not resolve
+    }
+  } else {
+    xecho -s -b Usage: DNS <nickname|hostname|ip address>
+  }
+}
+
+alias toggle {
+  if ([$#]) {
+    @ :sets = _getsets($0*)
+    @ :temp = findw($0 $sets) > -1 ? [$0] : sets
+    if (#temp == 1) {
+      unless (findw($temp OFF ON) < 0) {
+        set $0 toggle
+      } else {
+        xecho -b Cannot toggle "$0"
+      }
+    } else {
+      set $0
+    }
+  } else {
+    xecho -s -b Usage: TOGGLE <$$variable>
+  }
+}
+
+
+alias unalias {
+  if ([$#]) {
+    alias -$*
+  } else {
+    xecho -s -b Usage: UNALIAS <alias>
+  }
+}
+
+alias pwd cd $()
+
+alias unset {
+  if ([$#]) {
+    if ([$($0)]) {
+      set -$0
+    } else {
+      set $0
+    }
+  } else {
+    xecho -s -b Usage: UNSET <variable>
+  }
+}
+
+alias sv sver
+alias sver {
+  if ((:targ = @ ? [$0] : T)) {
+    //msg $targ ircII $J $uname(%s %r) - $CLIENT_INFORMATION
+  } else {
+    xecho -s -b Usage: SVER [target]
+  }
+}
+
+alias fsv svrip
+alias svrip {
+  if ([$@] && ([$0] != [-h])) {
+    @ :args = [$*]
+    @ :targ 
+    @ tmp.args = [$1-]
+    eval ^on #-ctcp_reply 200299 "$0 VERSION *" {
+      quote PRIVMSG $T :$2- $tmp.args
+      if (ischannel($T)) {
+        shook send_public $T $2- $tmp.args
+      } else {
+        shook send_msg $T $1- $tmp.args
+      }
+      ^on #-ctcp_reply 200299 -
+      @ tmp.args = []
+    }
+    //ctcp $0 version
+  } else {
+    xecho -s -b Usage: SVRIP [channel|*] <nick> [append]
+  }
+}
+
+alias sping {
+  unless ([$0] == [-h]) {
+    quote PING ${@ ? [$*] : S}
+  } else {
+    xecho -s -b Usage: SPING [server]
+  }
+}
+
+alias mpart partall
+alias partall {
+  unless ([$0] == [-h]) {
+    fe ($mychannels()) chan {
+      unless ([$chan] == [$0]) {
+        //part $chan
+      }
+    }
+  } else {
+    xecho -s -b Usage: PARTALL [except]
+  }
+}
+
+alias reload {
+  unless ([$0] == [-h]) {
+    if (:temp = DEBUG) {
+      ^debug 0
+      ^load ~/.epicrc
+      ^debug $temp
+    } else {
+      ^load ~/.epicrc
+    }
+  } else {
+    xecho -s -b $(K)RELOAD
+  }
+}
+
+alias binds {
+  unless ([$0] == [-h]) {
+    bind $0
+  } else {
+    xecho -s -b Usage: BINDS [match]
+  }
+}
+alias ignores {
+  unless ([$0] == [-h]) {
+    //ignore $0
+  } else {
+    xecho -s -b Usage: IGNORES [match]
+  }
+}
+
+alias isfunction {
+  if ([$#]) {
+    xecho -b Function "$0" DOES ${fnexist($0) ? [] : [NOT ]}exist
+  } else {
+    xecho -s -b Usage: ISFUNCTION <function>
+  }
+}
+
+alias nodebug debug 0
+alias debug {
+  unless ([$0] == [-h]) {
+    set debug ${[$#] ? [$0] : 7}
+  } else {
+    xecho -s -b Usage: DEBUG [level]
+  }
+}
+
+alias * mode *
+alias " quote
+alias ? help
+alias a away
+alias b ban
+alias c mode *
+alias d dcc
+alias e eval
+alias g gone
+alias h history
+alias i invite
+alias j join
+alias k kick
+alias l leave
+alias m msg
+alias n notice
+alias o op
+alias p ping
+alias q query
+alias r reply
+alias s say
+alias t topic
+alias v voice
+alias w who
+alias x exec
+alias ll lastlog
+alias lll lastlog -l
+alias ww whowas
+alias dall dump all
+alias clearall clear -a -u
+alias cla clear -u -a
+alias cls clear -u
+alias opers oidle
+alias oidle stats p
+alias d+ set display on
+alias d- set display off
+alias h+ set hold_mode on
+alias h- set hold_mode off
+alias top topic
+
+# eval shortcuts
+alias rme eval me
+alias rmsg eval msg
+alias rsay eval say
+alias rwall eval wall
+alias ronotice eval onotice
+alias rnotice eval notice
+alias recho eval echo
+alias rtype eval xtype -literal
+alias rtopic eval topic
+alias rassign eval assign
+alias rquote eval quote
+
+alias saytime {
+  if ((:targ = @ ? [$0] : T)) {
+    msg $targ $stdtime()
+  } else {
+    xecho -s -b Usage: SAYTIME [target]
+  }
+}
+## names
+
+alias sc scan
+alias scan {
+  ^local list,nice
+  ^local args $*
+  @ :chan = ischannel($0) ? shift(args) : C
+  switch ($args) {
+    () (a) {
+      @ list = _channel($chan)
+      @ nice = [users]
+    }
+    (o) {
+      @ list = pattern(@% $_channel($chan))
+      @ nice = [chops]
+    }
+    (v) {
+      @ list = pattern(+% $_channel($chan))
+      @ nice = [voices]
+    }
+    (n) {
+      @ list = pattern(.% $_channel($chan)))
+      @ nice = [chums]
+    }
+    (i) {
+      @ list = opernicks($chan)
+      @ nice = [opers]
+    }
+    (*) {
+      xecho -s -b Usage: SCAN [channel|*] [a|o|v|n|i]
+    }
+  }
+  if (remts($list)) {
+    shook 353 0 0 $chan $list
+    shook 366
+  } else {
+    xecho -b 36[-1$chan36] No such users
+  }
+}
+
+alias sh show
+alias show {
+  ^local list
+  ^local args $*
+  @ :chan = ischannel($0) ? shift(args) : C
+  switch ($args) {
+    () (a) {
+      @ list = _channel($chan)
+    }
+    (o) {
+      @ list = pattern(@% $_channel($chan))
+    }
+    (v) {
+      @ list = pattern(+% $_channel($chan))
+    }
+    (n) {
+      @ list = pattern(.% $_channel($chan)))
+    }
+    (i) {
+      @ list = opernicks($chan)
+    }
+    (*) {
+      xecho -s -b Usage: SHOW [channel|*] [a|o|v|n|i]
+    }
+  }
+  if (remts($list)) {
+     echo 36+[-1Channel36]-----[-1Nick36]----[-1User@Hostname36]$repeat(${gomx() - 44} -)-56-57>
+    ^set continued_line 36|  57-             36-        
+    fe ($list) temp {
+      fmt.str.disp_opn 36$[12]chan $msar(g/@/56@54/+/51+54/./ 54/\*/52\*54/$[9]temp) $userhost($strip(?@+.* $temp)) 
+    }
+    ^set -continued_line
+    fmt.hdr.disp_opn $strftime($clockfmt())
+  }
+}
+
+
+## whois
+
+alias who {
+    if (gomx() < 131) {
+      xecho -b Warning: Terminal width should be 132 characters for this command
+    }
+    @:targ = @ ? [$*] : C
+    echo +- 57Channel ----- 57Nick (52H/51G) --- 57Username@57Host ------------------------------- 57Server:57Hops - 57Name -$repeat(${gomx() - 100} -)>
+    //who $targ
+}
+
+alias wi whois
+alias whois {
+  unless ([$0] == [-h]) {
+    unless ([$*] =~ [*.*]) {
+      //whois ${[$#] ? [$*] : Q ? Q : N}
+    } else {
+      fwhois $*
+    }
+  } else {
+    xecho -s -b Usage: WHOIS [nickname|domain]
+  }
+}
+
+alias wii {
+  unless ([$0] == [-h]) {
+    if (@) {
+      fe ($split(, $0)) nick {
+        //whois $nick $nick
+      }
+    } else {
+      @ :nick = @ ? [$0] : Q ? Q : N
+      //whois $nick $nick
+    }
+  } else {
+    xecho -s -b Usage: WII [nickname]
+  }
+}
+
+load ~/jirc/help.irc
+load ~/jirc/config.irc
+load ~/jirc/dcc.irc
+load ~/jirc/windows.irc
+load ~/jirc/ctcp.irc
+load ~/jirc/msg.irc
+load ~/jirc/ignore.irc
+load ~/jirc/invite.irc
+load ~/jirc/kick.irc
+load ~/jirc/chanmode.irc
+load ~/jirc/interactive.irc
+
+alias _getsets {
+  @ function_return = pattern(${[$#] ? [$0] : [*]} $sort($getsets() CONTROL_C_COLORS SHOW_NUMERICS_STR MIRCS))
+}
+
+alias stdtime {@ function_return = strftime(${[$@0] ? [$0 ] : []}%a %b %e $clockfmt() %Z %Y)}
+
+alias chan.same_as {
+  fe ($uniq($mychannels($1))) chan {
+    if (onchannel($0 $chan)) {
+      ^push function_return $chan
+    }
+  }
+}
+
+alias chn.mass_kick {
+  if (ischanop($N $chan)) {
+    ^local n.
+    switch ($max_modes($serv)) {
+      (6) {
+        fe ($1-) n.0 n.1 n.2 n.3 n.4 n.5 {
+          //kick $0 $n.0,$n.1,$n.2,$n.3,$n.4,$n.5 $tmp.reason
+        }
+      }
+      (4) {
+        fe ($1-) n.0 n.1 n.2 n.3 {
+          //kick $0 $n.0,$n.1,$n.2,$n.3 $tmp.reason
+        }
+      }
+      (3) {
+        fe ($1-) n.0 n.1 n.2 {
+          //kick $0 $n.0,$n.1,$n.2 $tmp.reason
+        }
+      }
+    }
+    ^assign -tmp.reason
+  }
+}
+
+alias nums {
+  fe ($split(,; $*)) num {
+    @ :range = num =~ [%-%]
+    @ :num = split(- $num)
+    @ :lhs = shift(num)
+    @ :rhs = num ? num : 1
+    ^push function_return ${range ? jot($lhs $rhs) : lhs}
+  }
+  @ function_return = uniq($function_return)
+}
+
+alias j.init {
+  foreach -act temp {
+    ^act.$temp
+  }
+  ^win.fix_all
+}
+
+alias gomx {@ function_return = word(0 $geom())}
+alias gomy {@ function_return = word(1 $geom())}
+
+
+# fmt.hdr.disp_opn # open
+# fmt.hdr.disp_enc # enclosed
+# fmt.ftr.disp_opn
+# fmt.ftr.disp_enc
+
+# fmt.av.disp_opn
+# fmt.av.disp_enc
+# fmt.av.get_contline
+
+# fmt.str.disp_enc
+# fmt.str.disp_opn
+
+# echo with border on RHS as well as LHS
+alias fmt.av.disp_enc fmt.str.disp_enc 57$[11]0 -1//-1 $1-
+alias fmt.av.disp_opn echo 36| 57$[11]0 -1//-1 $1-
+alias fmt.av.get_contline {@function_return = [36| 57--1              ]}
+alias fmt.str.disp_enc xecho -s 36|-1 $[${74 + (@ - printlen($*))}]* 36|-1
+alias fmt.str.disp_opn echo 36|-1 $*
+
+alias fmt.hdr.disp_enc {
+  if (tmp.noborder) {
+    @ tmp.noborder = []
+    #echo "JIRC_DEBUG - noborder was on..."
+  } else {
+    if (@) {
+      ^set floating_point_math off
+      @ :len = printlen($0-)
+      @ :odd = len % 2
+      @ :lhs = 36 - (len / 2)
+      @ :rhs = odd ? lhs - 1 : lhs
+      echo 36+-$repeat($lhs -)36[-1$0-36]36$repeat($rhs -)-+
+      ^set floating_point_math on
+    } else {
+      echo 36+$repeat(76 -)+
+    }
+  }
+}
+
+# usage: disp_fld_enc % header % header2 % header3
+alias fmt.hdr.disp_fld_enc {
+  if (tmp.noborder) {
+    @ tmp.noborder = []
+		return
+  }
+
+  if (@) {
+    ^local totalLen
+    ^local args $*
+    ^local arg
+    ^local perc
+    ^local pad
+    ^local data 36+-
+    # +1 for trailing +
+    @ :widthLeft = gomx() - (printlen($data) + 1)
+
+    ^set floating_point_math off
+    while (perc = shift(args)) {
+      unless (arg = shift(args)) {
+        echo j - ERROR in header field.. can't find arg
+      }
+
+      # determine how many '-' to add (+2 is for [])
+      # TODO: 0 = rest
+      @ pad = ((widthLeft * perc) / 100) - (printlen($arg) + 2)
+      @ data #= [\[57$arg36\]] ## repeat($pad -)
+    }
+    
+    # -1 since RHS + isn't there
+    @ totalLen = printlen($data) - 1
+    if (totalLen < widthLeft)
+      @ data #= repeat(${widthLeft - totalLen} -)
+
+    @ data #= [+]
+    ^set floating_point_math on
+
+    echo $data
+  }
+}
+
+# if 1 argument, put it on the RHS, otherwise first arg is the offset from the
+# left and the rest is the string to display
+alias fmt.hdr.disp_opn {
+  if (@) {
+    if ([$#] > 1) {
+      echo 36+-$repeat($0 -)36[-1$1-36]36$repeat(${gomx() - (7 + printlen($1-) + [$0])} -)56-57>
+    } else {
+      echo 36+-$repeat(${gomx() - (printlen($0) + 8)} -)36[-1$036]36-56-57>
+    }
+  } else {
+    echo 36+$repeat(${gomx() - 4} -)56-57>
+  }
+}
+
+alias _key {@ function_return = (:temp = key($0)) != [*] ? temp : []}
+alias ts {@ function_return = opt.stamp ? [\[57$Z\] ] : []}
+
+alias max_modes {
+  switch ($R) {
+    (u2.*) (dal*) (airc*) (irc-z*) {
+      @ function_return = (msc.modes[$0] = 6)
+    }
+    (*2.9.*) {
+      @ function_return = (msc.modes[$0] = 3)
+    }
+    (*) {
+      @ function_return = (msc.modes[$0] = 4)
+    }
+  }
+}
+
+alias act.ncomp if (opt.ncomp) {^on ^input "%: *" sendline \$nickcomp($0) \$1-}
+
+alias ovn_get {
+  if (ischanop($0 $1)) {
+    @function_return = [@]
+  } elsif (ischanvoice($0 $1)) {
+    @function_return = [+]
+  }
+}
+
+alias _channel {@ function_return = tr(/!,/@?/$sort($msar(g/@?/!/@+/!/@./!/.+/+/.././$channel($0))))}
+
+alias _userhost {
+  wait for {
+    ^userhost $0 -cmd {
+      @ function_return = [$3] !~ [?UNKNOWN?] ? [$0!$3@$4] : []
+    } 
+  }
+}
+
+alias _n {@ function_return = servernick($lastserver())}
+alias tod {@ function_return = strftime($* $CLOCK_FORMAT)}
+alias clockfmt {@ function_return = opt.24fmt ? [%H\:%M\:%S] : [%l\:%M\:%S%p]}
+alias plural {@ function_return = [$0] != 1 ? [s] : []}
+alias chums {@ function_return = strip(?. $pattern(.% $_channel($0)))}
+alias voiced {@ function_return = strip(?+ $pattern(+% $_channel($0)))}
+alias remts {@ function_return = leftw($# $*)}
+alias opernicks {
+   if (:chan = ischannel($0) ? [$0] : C) {
+    wait for {
+      who -o $chan -line {
+        push function_return *$1
+      } -end {}
+    }
+  }
+}
+
+alias null comment
+alias uptime {@ function_return = tdiff(${time() - F})}
+alias uptime2 {@ function_return = tdiff2(${time() - F})}
+alias 3beeps {
+  beep
+  timer 1 beep
+  timer 2 beep
+}
+alias pscale {@ function_return = repeat(${[$0] / 10} *)}
+
+alias j.country_get {
+  switch ($0) {
+    (net) { @ function_return = [Network Provider] }
+    (com) { @ function_return = [Commercial Organization] }
+    (org) { @ function_return = [Non-Profit Organization] }
+    (edu) { @ function_return = [Educational Institution] }
+    (mil) { @ function_return = [US Military Agency] }
+    (gov) { @ function_return = [US Government Agency] }
+    (int) { @ function_return = [International Entity] }
+    (ad) { @ function_return = [Andorra] }
+    (ae) { @ function_return = [United Arab Emirates] }
+    (af) { @ function_return = [Afghanistan] }
+    (ag) { @ function_return = [Antigua and Barbuda] }
+    (ai) { @ function_return = [Anguilla] }
+    (al) { @ function_return = [Albania] }
+    (am) { @ function_return = [Armenia] }
+    (an) { @ function_return = [Netherlands Antilles] }
+    (ao) { @ function_return = [Angola] }
+    (aq) { @ function_return = [Antarctica] }
+    (ar) { @ function_return = [Argentina] }
+    (as) { @ function_return = [American Samoa] }
+    (at) { @ function_return = [Austria] }
+    (au) { @ function_return = [Australia] }
+    (aw) { @ function_return = [Aruba] }
+    (az) { @ function_return = [Azerbaidjan] }
+    (ba) { @ function_return = [Bosnia-Herzegovina] }
+    (bb) { @ function_return = [Barbados] }
+    (bd) { @ function_return = [Bangladesh] }
+    (be) { @ function_return = [Belgium] }
+    (bf) { @ function_return = [Burkina Faso] }
+    (bg) { @ function_return = [Bulgaria] }
+    (bh) { @ function_return = [Bahrain] }
+    (bi) { @ function_return = [Burundi] }
+    (bj) { @ function_return = [Benin] }
+    (bm) { @ function_return = [Bermuda] }
+    (bn) { @ function_return = [Brunei Darussalam] }
+    (bo) { @ function_return = [Bolivia] }
+    (br) { @ function_return = [Brazil] }
+    (bs) { @ function_return = [Bahamas] }
+    (bt) { @ function_return = [Bhutan] }
+    (bv) { @ function_return = [Bouvet Island] }
+    (bw) { @ function_return = [Botswana] }
+    (by) { @ function_return = [Belarus] }
+    (bz) { @ function_return = [Belize] }
+    (ca) { @ function_return = [Canada] }
+    (cc) { @ function_return = [Cocos (Keeling) Islands] }
+    (cf) { @ function_return = [Central African Republic] }
+    (cg) { @ function_return = [Congo] }
+    (ch) { @ function_return = [Switzerland] }
+    (ci) { @ function_return = [Ivory Coast (Cote D'Ivoire)] }
+    (ck) { @ function_return = [Cook Islands] }
+    (cl) { @ function_return = [Chile] }
+    (cm) { @ function_return = [Cameroon] }
+    (cn) { @ function_return = [China] }
+    (co) { @ function_return = [Colombia] }
+    (cr) { @ function_return = [Costa Rica] }
+    (cs) { @ function_return = [Former Czechoslovakia] }
+    (cu) { @ function_return = [Cuba] }
+    (cv) { @ function_return = [Cape Verde] }
+    (cx) { @ function_return = [Christmas Island] }
+    (cy) { @ function_return = [Cyprus] }
+    (cz) { @ function_return = [Czech Republic] }
+    (de) { @ function_return = [Germany] }
+    (dj) { @ function_return = [Djibouti] }
+    (dk) { @ function_return = [Denmark] }
+    (dm) { @ function_return = [Dominica] }
+    (do) { @ function_return = [Dominican Republic] }
+    (dz) { @ function_return = [Algeria] }
+    (ec) { @ function_return = [Ecuador] }
+    (ee) { @ function_return = [Estonia] }
+    (eg) { @ function_return = [Egypt] }
+    (eh) { @ function_return = [Western Sahara] }
+    (es) { @ function_return = [Spain] }
+    (et) { @ function_return = [Ethiopia] }
+    (fi) { @ function_return = [Finland] }
+    (fj) { @ function_return = [Fiji] }
+    (fk) { @ function_return = [Falkland Islands] }
+    (fm) { @ function_return = [Micronesia] }
+    (fo) { @ function_return = [Faroe Islands] }
+    (fr) { @ function_return = [France] }
+    (fx) { @ function_return = [France (European Territory)] }
+    (ga) { @ function_return = [Gabon] }
+    (gb) { @ function_return = [Great Britain] }
+    (gd) { @ function_return = [Grenada] }
+    (ge) { @ function_return = [Georgia] }
+    (gf) { @ function_return = [French Guyana] }
+    (gh) { @ function_return = [Ghana] }
+    (gi) { @ function_return = [Gibraltar] }
+    (gl) { @ function_return = [Greenland] }
+    (gm) { @ function_return = [Gambia] }
+    (gn) { @ function_return = [Guinea] }
+    (gp) { @ function_return = [Guadeloupe (French)] }
+    (gq) { @ function_return = [Equatorial Guinea] }
+    (gr) { @ function_return = [Greece] }
+    (gs) { @ function_return = [S Georgia & S Sandwich Islands] }
+    (gt) { @ function_return = [Guatemala] }
+    (gu) { @ function_return = [Guam (US)] }
+    (gw) { @ function_return = [Guinea Bissau] }
+    (gy) { @ function_return = [Guyana] }
+    (hk) { @ function_return = [Hong Kong] }
+    (hm) { @ function_return = [Heard and McDonald Islands] }
+    (hn) { @ function_return = [Honduras] }
+    (hr) { @ function_return = [Croatia] }
+    (ht) { @ function_return = [Haiti] }
+    (hu) { @ function_return = [Hungary] }
+    (id) { @ function_return = [Indonesia] }
+    (ie) { @ function_return = [Ireland] }
+    (il) { @ function_return = [Israel] }
+    (in) { @ function_return = [India] }
+    (io) { @ function_return = [British Indian Ocean Territory] }
+    (iq) { @ function_return = [Iraq] }
+    (ir) { @ function_return = [Iran] }
+    (is) { @ function_return = [Iceland] }
+    (it) { @ function_return = [Italy] }
+    (jm) { @ function_return = [Jamaica] }
+    (jo) { @ function_return = [Jordan] }
+    (jp) { @ function_return = [Japan] }
+    (ke) { @ function_return = [Kenya] }
+    (kg) { @ function_return = [Kyrgyzstan] }
+    (kh) { @ function_return = [Cambodia] }
+    (ki) { @ function_return = [Kiribati] }
+    (km) { @ function_return = [Comoros] }
+    (kn) { @ function_return = [Saint Kitts & Nevis Anguilla] }
+    (kp) { @ function_return = [North Korea] }
+    (kr) { @ function_return = [South Korea] }
+    (kw) { @ function_return = [Kuwait] }
+    (ky) { @ function_return = [Cayman Islands] }
+    (kz) { @ function_return = [Kazakhstan] }
+    (la) { @ function_return = [Laos] }
+    (lb) { @ function_return = [Lebanon] }
+    (lc) { @ function_return = [Saint Lucia] }
+    (li) { @ function_return = [Liechtenstein] }
+    (lk) { @ function_return = [Sri Lanka] }
+    (lr) { @ function_return = [Liberia] }
+    (ls) { @ function_return = [Lesotho] }
+    (lt) { @ function_return = [Lithuania] }
+    (lu) { @ function_return = [Luxembourg] }
+    (lv) { @ function_return = [Latvia] }
+    (ly) { @ function_return = [Libya] }
+    (ma) { @ function_return = [Morocco] }
+    (mc) { @ function_return = [Monaco] }
+    (md) { @ function_return = [Moldavia] }
+    (mg) { @ function_return = [Madagascar] }
+    (mh) { @ function_return = [Marshall Islands] }
+    (mk) { @ function_return = [Macedonia] }
+    (ml) { @ function_return = [Mali] }
+    (mm) { @ function_return = [Myanmar] }
+    (mn) { @ function_return = [Mongolia] }
+    (mo) { @ function_return = [Macau] }
+    (mp) { @ function_return = [Northern Mariana Islands] }
+    (mq) { @ function_return = [Martinique (French)] }
+    (mr) { @ function_return = [Mauritania] }
+    (ms) { @ function_return = [Montserrat] }
+    (mt) { @ function_return = [Malta] }
+    (mu) { @ function_return = [Mauritius] }
+    (mv) { @ function_return = [Maldvives] }
+    (mw) { @ function_return = [Malawi] }
+    (mx) { @ function_return = [Mexico] }
+    (my) { @ function_return = [Malaysia] }
+    (mz) { @ function_return = [Mozambique] }
+    (na) { @ function_return = [Namibia] }
+    (nc) { @ function_return = [New Caledonia (French)] }
+    (ne) { @ function_return = [Niger] }
+    (nf) { @ function_return = [Norfolk Island] }
+    (ng) { @ function_return = [Nigeria] }
+    (ni) { @ function_return = [Nicaragua] }
+    (nl) { @ function_return = [Netherlands] }
+    (no) { @ function_return = [Norway] }
+    (np) { @ function_return = [Nepal] }
+    (nr) { @ function_return = [Nauru] }
+    (nt) { @ function_return = [Neutral Zone] }
+    (nu) { @ function_return = [Niue] }
+    (nz) { @ function_return = [New Zealand] }
+    (om) { @ function_return = [Oman] }
+    (pa) { @ function_return = [Panama] }
+    (pe) { @ function_return = [Peru] }
+    (pf) { @ function_return = [Polynesia (French)] }
+    (pg) { @ function_return = [Papua New Guinea] }
+    (ph) { @ function_return = [Philippines] }
+    (pk) { @ function_return = [Pakistan] }
+    (pl) { @ function_return = [Poland] }
+    (pm) { @ function_return = [Saint Pierre and Miquelon] }
+    (pn) { @ function_return = [Pitcairn Island] }
+    (pr) { @ function_return = [Puerto Rico] }
+    (pt) { @ function_return = [Portugal] }
+    (pw) { @ function_return = [Palau] }
+    (py) { @ function_return = [Paraguay] }
+    (qa) { @ function_return = [Qatar] }
+    (re) { @ function_return = [Reunion (French)] }
+    (ro) { @ function_return = [Romania] }
+    (ru) { @ function_return = [Russian Federation] }
+    (rw) { @ function_return = [Rwanda] }
+    (sa) { @ function_return = [Saudi Arabia] }
+    (sb) { @ function_return = [Solomon Islands] }
+    (sc) { @ function_return = [Seychelles] }
+    (sd) { @ function_return = [Sudan] }
+    (se) { @ function_return = [Sweden] }
+    (sg) { @ function_return = [Singapore] }
+    (sh) { @ function_return = [Saint Helena] }
+    (si) { @ function_return = [Slovenia] }
+    (sj) { @ function_return = [Svalbard and Jan Mayen Islands] }
+    (sk) { @ function_return = [Slovak Republic] }
+    (sl) { @ function_return = [Sierra Leone] }
+    (sm) { @ function_return = [San Marino] }
+    (sn) { @ function_return = [Senegal] }
+    (so) { @ function_return = [Somalia] }
+    (sr) { @ function_return = [Suriname] }
+    (st) { @ function_return = [Saint Tome and Principe] }
+    (su) { @ function_return = [Former USSR] }
+    (sv) { @ function_return = [El Salvador] }
+    (sy) { @ function_return = [Syria] }
+    (sz) { @ function_return = [Swaziland] }
+    (tc) { @ function_return = [Turks and Caicos Islands] }
+    (td) { @ function_return = [Chad] }
+    (tf) { @ function_return = [French Southern Territories] }
+    (tg) { @ function_return = [Togo] }
+    (th) { @ function_return = [Thailand] }
+    (tj) { @ function_return = [Tadjikistan] }
+    (tk) { @ function_return = [Tokelau] }
+    (tm) { @ function_return = [Turkmenistan] }
+    (tn) { @ function_return = [Tunisia] }
+    (to) { @ function_return = [Tonga] }
+    (tp) { @ function_return = [East Timor] }
+    (tr) { @ function_return = [Turkey] }
+    (tt) { @ function_return = [Trinidad and Tobago] }
+    (tv) { @ function_return = [Tuvalu] }
+    (tw) { @ function_return = [Taiwan] }
+    (tz) { @ function_return = [Tanzania] }
+    (ua) { @ function_return = [Ukraine] }
+    (ug) { @ function_return = [Uganda] }
+    (uk) { @ function_return = [United Kingdom] }
+    (um) { @ function_return = [USA Minor Outlying Islands] }
+    (us) { @ function_return = [United States] }
+    (uy) { @ function_return = [Uruguay] }
+    (uz) { @ function_return = [Uzbekistan] }
+    (va) { @ function_return = [Vatican City State] }
+    (vc) { @ function_return = [Saint Vincent & Grenadines] }
+    (ve) { @ function_return = [Venezuela] }
+    (vg) { @ function_return = [Virgin Islands (British)] }
+    (vi) { @ function_return = [Virgin Islands (US)] }
+    (vn) { @ function_return = [Vietnam] }
+    (vu) { @ function_return = [Vanuatu] }
+    (wf) { @ function_return = [Wallis and Futuna Islands] }
+    (ws) { @ function_return = [Samoa] }
+    (ye) { @ function_return = [Yemen] }
+    (yt) { @ function_return = [Mayotte] }
+    (yu) { @ function_return = [Yugoslavia] }
+    (za) { @ function_return = [South Africa] }
+    (zm) { @ function_return = [Zambia] }
+    (zr) { @ function_return = [Zaire] }
+    (zw) { @ function_return = [Zimbabwe] }
+    (arpa) { @ function_return = [ARPA Internet] }
+    (nato) { @ function_return = [North Atlantic Treaty Organization] }
+    (*) { @ function_return = isnumber($strip(. $0)) ? [Dotted Quad Notation] : [Unknown] }
+  }
+}
+
+# borrowed from recursion by Daemon
+alias purge {
+  foreach $0 temp {
+    purge $0.$temp
+  }
+  ^assign -$0
+}
+
+alias _mask {
+  if (@) {
+    @ function_return = mask(${opt.umask < 14 && opt.umask > 0 ? opt.umask : 3} $strip(~ $*))
+  }
+}
+load ~/jirc/sets.irc
+load ~/jirc/binds.irc
+load ~/jirc/format.irc
+load ~/jirc/tabcomp.irc
+load ~/jirc/pending.irc
+load ~/jirc/relay.irc
+load ~/jirc/lag.irc
+load ~/jirc/ban.irc
+load ~/jirc/statusovn.irc
+load ~/jirc/misc.irc
+load ~/jirc/away.irc
+load ~/jirc/acl.irc
+
+## initialize
+
+mesg no
+xtitle
+awaylogs
+
+alias j.irc {@ function_return = 1}
+
+j.init
+
+eval xecho -b $j.nicestr v$sar(g/././$jirc.ver) loaded into client[0m

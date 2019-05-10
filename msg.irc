@@ -1,0 +1,34 @@
+## msgs
+
+alias amsg {
+  if ([$#]) {
+    fe ($mychannels()) t0 t1 t2 t3 {
+      msg $tr(/ /,/$remts($t0 $t1 $t2 $t3)) $*
+    }
+  } else {
+    xecho -s -b Usage: AMSG <text>
+  }
+}
+
+alias reply {
+  if ([$#]) {
+    msg $, $*
+  } else {
+    xecho -s -b Usage: REPLY <text>
+  }
+}
+
+alias meb {
+  ^local args $*
+  @ :chan = ischannel($0) || [$0] == [*] ? shift(args) : C
+  @ :nicks = shift(args)
+  if (@args) {
+    fe ($remws($split(, $nicks) / $onchannel($chan))) t0 t1 t2 t3 {
+      ^msg $t0,$t1,$t2,$t3 [PRIVMSG to all but $nicks on $chan] $args
+    }
+  } else {
+    xecho -s -b Usage: MEB [channel|*] <nickname[,s]> <text>
+  }
+}
+
+

@@ -1,0 +1,19 @@
+## pending operations cache - currently dcc chat and dcc get
+
+alias pend.add {@ setitem(pend.$0 $numitems(pend.$0) $1-)}
+alias pend.del {@ delitem(pend.$0 $finditem(pend.$0 $1-))}
+alias pend.get {@ function_return = getitem(pend.$0 ${numitems(pend.$0) - 1})}
+alias pend.get_all {
+  fe (getmatches(pend.$0 $1)) temp {
+    push function_return $getitem(pend.$0 $temp)
+  }
+  @ function_return = uniq($function_return)
+}
+
+on #-dcc_request 20 "% chat*" {pend.add dchat $0}
+on #-dcc_connect 20 "% chat*" {pend.del dchat $0}
+on #-dcc_lost 20 "% chat*" {pend.del dchat $0}
+on #-dcc_request 20 "% send*" {pend.add dget $0}
+on #-dcc_connect 20 "% get*" {pend.del dget $0}
+
+
